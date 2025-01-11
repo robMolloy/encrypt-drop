@@ -41,9 +41,9 @@ export const watchValidDiceRollDbEntries = (p: {
   onAddedDoc?: (x: TDiceRollDbEntry) => void;
 }) => {
   const collectionRef = collection(db, collName);
-  const orderKey = p.orderKey ?? "createdAt";
-  const orderDirection = p.orderDirection ?? "desc";
-  const q1 = query(collectionRef, where("uid", "==", p.uid), orderBy(orderKey, orderDirection));
+  // const orderKey = p.orderKey ?? "createdAt";
+  // const orderDirection = p.orderDirection ?? "desc";
+  const q1 = query(collectionRef, where("uid", "==", p.uid));
   let first = true;
   const unsub = onSnapshot(q1, (snapshot) => {
     const snapshotSummary = {
