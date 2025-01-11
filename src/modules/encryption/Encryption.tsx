@@ -1,16 +1,5 @@
+import { encryptFile } from "./utils";
 import { useRef, useState } from "react";
-
-const encryptFile = async (x: {
-  initializationVector: Uint8Array;
-  encryptionKey: CryptoKey;
-  unencryptedFileBuffer: ArrayBuffer;
-}) => {
-  return window.crypto.subtle.encrypt(
-    { name: "AES-GCM", iv: x.initializationVector },
-    x.encryptionKey,
-    x.unencryptedFileBuffer,
-  );
-};
 
 export const Encryption = (p: { encryptionKey: CryptoKey; initializationVector: Uint8Array }) => {
   const fileUploadElementRef = useRef<HTMLInputElement>(null);

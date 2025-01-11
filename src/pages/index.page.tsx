@@ -1,46 +1,76 @@
 import { Typography } from "@/components";
-import { db } from "@/config/firebaseConfig";
-import {
-  TDiceRollDbEntry,
-  addDiceRollDbEntry as createDiceRollDbEntry,
-  watchValidDiceRollDbEntries,
-} from "@/db/dbDiceRolls";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { useEffect, useState } from "react";
+import { Decryption } from "@/modules/encryption/Decryption";
+import { Encryption } from "@/modules/encryption/Encryption";
+import { PasswordInput } from "@/modules/encryption/PasswordInput";
+import { deriveEncryptionKey, generateInitializationVector } from "@/modules/encryption/utils";
+import { useState } from "react";
 
 const Parent = () => {
-  const authStore = useAuthStore();
-  const [docs, setDocs] = useState<TDiceRollDbEntry[]>([]);
+  const [setting, setSetting] = useState<"Encrypt" | "Decrypt">("Encrypt");
 
-  useEffect(() => {
-    const safeStore = authStore.getSafeStore();
-    if (safeStore.status !== "logged_in") return;
-    const unsubscribe = watchValidDiceRollDbEntries({
-      db,
-      uid: safeStore.user.uid,
-      onNewSnapshot: (x) => setDocs(x),
-    });
-
-    return () => unsubscribe();
-  }, []);
+  const [password, setPassword] = useState("");
+  const [encryptionKey, setEncryptionKey] = useState<CryptoKey>();
+  const [initializationVector, setInitializationVector] = useState<Uint8Array>();
 
   return (
     <main className={`min-h-screen`}>
       <Typography fullPage>
+        <h1>{setting}</h1>
         <button
-          className="btn"
-          onClick={() => {
-            const safeStore = authStore.getSafeStore();
-            if (safeStore.status !== "logged_in") return;
-            createDiceRollDbEntry({
-              db: db,
-              formData: { uid: safeStore.user.uid, number: Math.floor(Math.random() * 6) },
-            });
-          }}
+          className="btn btn-primary"
+          onClick={() => setSetting((x) => (x === "Decrypt" ? "Encrypt" : "Decrypt"))}
         >
-          add something
+          Change to {setting === "Decrypt" ? "Encrypt" : "Decrypt"}
         </button>
-        {<pre>{JSON.stringify(docs, undefined, 2)}</pre>}
+        <h2>Keys</h2>
+
+        <br />
+        <PasswordInput value={password} onChange={(x) => setPassword(x)} />
+
+        <br />
+        <span className="flex gap-4">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={async () => setEncryptionKey(await deriveEncryptionKey({ password }))}
+          >
+            Derive Encryption Key
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={async () => setInitializationVector(await generateInitializationVector())}
+          >
+            Generate Initialisation Vector
+          </button>
+        </span>
+
+        <br />
+
+        {setting === "Encrypt" && (
+          <>
+            {encryptionKey && initializationVector ? (
+              <Encryption
+                encryptionKey={encryptionKey}
+                initializationVector={initializationVector}
+              />
+            ) : (
+              <div>Generate encryption & initializationVector keys to allow decryption</div>
+            )}
+          </>
+        )}
+        {setting === "Decrypt" && (
+          <>
+            {encryptionKey && initializationVector ? (
+              <Decryption
+                encryptionKey={encryptionKey}
+                initializationVector={initializationVector}
+              />
+            ) : (
+              <div>Generate encryption & initializationVector keys to allow decryption</div>
+            )}
+          </>
+        )}
       </Typography>
     </main>
   );

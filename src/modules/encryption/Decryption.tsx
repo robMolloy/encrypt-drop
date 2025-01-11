@@ -1,16 +1,5 @@
+import { decryptFile } from "@/modules/encryption/utils";
 import { useRef, useState } from "react";
-
-const decryptFile = async (x: {
-  initializationVector: Uint8Array;
-  encryptionKey: CryptoKey;
-  encryptedFileBuffer: ArrayBuffer;
-}) => {
-  return window.crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: x.initializationVector },
-    x.encryptionKey,
-    x.encryptedFileBuffer,
-  );
-};
 
 export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: Uint8Array }) => {
   const fileUploadElementRef = useRef<HTMLInputElement>(null);
