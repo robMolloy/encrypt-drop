@@ -1,8 +1,11 @@
 import { Typography } from "@/components";
-import { Decryption } from "@/modules/encryption/Decryption";
-import { Encryption } from "@/modules/encryption/Encryption";
-import { PasswordInput } from "@/modules/encryption/PasswordInput";
-import { deriveEncryptionKey, generateInitializationVector } from "@/modules/encryption/utils";
+import {
+  Decryption,
+  Encryption,
+  PasswordInput,
+  deriveEncryptionKey,
+  generateInitializationVector,
+} from "@/modules/encryption";
 import { useState } from "react";
 
 const Parent = () => {

@@ -1,4 +1,4 @@
-import { decryptFile } from "@/modules/encryption/utils";
+import { decryptFile } from "./utils";
 import { useRef, useState } from "react";
 
 export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: Uint8Array }) => {

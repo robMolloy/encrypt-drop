@@ -1,3 +1,7 @@
+export const generateInitializationVector = async () => {
+  return window.crypto.getRandomValues(new Uint8Array(12));
+};
+
 export const deriveEncryptionKey = async (x: { password: string; salt?: Uint8Array }) => {
   const salt = x.salt ? x.salt : crypto.getRandomValues(new Uint8Array(16));
 
@@ -29,10 +33,6 @@ export const deriveEncryptionKey = async (x: { password: string; salt?: Uint8Arr
 //     "decrypt",
 //   ]);
 // };
-
-export const generateInitializationVector = async () => {
-  return window.crypto.getRandomValues(new Uint8Array(12));
-};
 
 export const decryptFile = async (x: {
   initializationVector: Uint8Array;
