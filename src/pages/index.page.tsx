@@ -6,7 +6,8 @@ import {
   deriveEncryptionKey,
   generateInitializationVector,
 } from "@/modules/encryption";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import debounce from "lodash/debounce";
 
 const Parent = () => {
   const [setting, setSetting] = useState<"Encrypt" | "Decrypt">("Encrypt");
@@ -14,6 +15,16 @@ const Parent = () => {
   const [password, setPassword] = useState("");
   const [encryptionKey, setEncryptionKey] = useState<CryptoKey>();
   const [initializationVector, setInitializationVector] = useState<Uint8Array>();
+
+  useEffect(() => {
+    (async () => setInitializationVector(await generateInitializationVector()))();
+  }, []);
+
+  const handleEncryptionKeyChange = async (x: string) => {
+    setEncryptionKey(await deriveEncryptionKey({ password: x }));
+  };
+
+  const debouncedHandleEncryptionKeyChange = debounce(handleEncryptionKeyChange, 300);
 
   return (
     <main className={`min-h-screen`}>
@@ -25,54 +36,28 @@ const Parent = () => {
         >
           Change to {setting === "Decrypt" ? "Encrypt" : "Decrypt"}
         </button>
-        <h2>Keys</h2>
 
         <br />
-        <PasswordInput value={password} onChange={(x) => setPassword(x)} />
-
-        <br />
-        <span className="flex gap-4">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={async () => setEncryptionKey(await deriveEncryptionKey({ password }))}
-          >
-            Derive Encryption Key
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={async () => setInitializationVector(await generateInitializationVector())}
-          >
-            Generate Initialisation Vector
-          </button>
-        </span>
+        <PasswordInput
+          value={password}
+          onChange={async (x) => {
+            setPassword(x);
+            debouncedHandleEncryptionKeyChange(x);
+          }}
+          onBlur={handleEncryptionKeyChange}
+        />
 
         <br />
 
-        {setting === "Encrypt" && (
-          <>
-            {encryptionKey && initializationVector ? (
-              <Encryption
-                encryptionKey={encryptionKey}
-                initializationVector={initializationVector}
-              />
-            ) : (
-              <div>Generate encryption & initializationVector keys to allow decryption</div>
-            )}
-          </>
+        {(!encryptionKey || !initializationVector) && (
+          <div>A password is required to encrypt or decrypt a file</div>
         )}
-        {setting === "Decrypt" && (
-          <>
-            {encryptionKey && initializationVector ? (
-              <Decryption
-                encryptionKey={encryptionKey}
-                initializationVector={initializationVector}
-              />
-            ) : (
-              <div>Generate encryption & initializationVector keys to allow decryption</div>
-            )}
-          </>
+
+        {setting === "Encrypt" && encryptionKey && initializationVector && (
+          <Encryption encryptionKey={encryptionKey} initializationVector={initializationVector} />
+        )}
+        {setting === "Decrypt" && encryptionKey && initializationVector && (
+          <Decryption encryptionKey={encryptionKey} initializationVector={initializationVector} />
         )}
       </Typography>
     </main>

@@ -1,4 +1,8 @@
-export const PasswordInput = (p: { value: string; onChange: (x: string) => void }) => {
+export const PasswordInput = (p: {
+  value: string;
+  onChange: (x: string) => void;
+  onBlur: (x: string) => void;
+}) => {
   return (
     <label className="form-control w-full">
       <div className="label">
@@ -21,6 +25,7 @@ export const PasswordInput = (p: { value: string; onChange: (x: string) => void 
         <input
           value={p.value}
           onChange={(e) => p.onChange(e.target.value)}
+          onBlur={() => p.onBlur(p.value)}
           type="password"
           className="w-full"
         />
