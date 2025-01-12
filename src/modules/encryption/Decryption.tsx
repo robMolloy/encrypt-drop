@@ -23,11 +23,17 @@ export const Decryption = (p: {
     setFileNameAndExtension(newFileName);
   }, [fileUploadElementRef.current?.files?.[0]]);
 
+  const step = (() => {
+    if (!encryptedFileBuffer) return "add-file";
+    if (!decryptedFileBuffer) return "decrypt-file";
+    return "download-file";
+  })();
+
   return (
     <span className="flex flex-col gap-4">
       <span className="flex gap-2">
         <input
-          disabled={!!encryptedFileBuffer}
+          disabled={step !== "add-file"}
           ref={fileUploadElementRef}
           type="file"
           className="file-input w-full"
@@ -43,7 +49,7 @@ export const Decryption = (p: {
           }}
         />
         <button
-          disabled={!encryptedFileBuffer}
+          disabled={step === "add-file"}
           onClick={() => {
             const fileInput = fileUploadElementRef.current;
             if (!fileInput) return { success: false } as const;
@@ -59,7 +65,7 @@ export const Decryption = (p: {
       </span>
 
       <button
-        disabled={!encryptedFileBuffer || !!decryptedFileBuffer}
+        disabled={step !== "decrypt-file"}
         type="button"
         className="btn btn-primary"
         onClick={async () => {
@@ -76,20 +82,20 @@ export const Decryption = (p: {
             type: "alert-warning",
             children: response.error.message
               ? response.error.message
-              : "Unable to decrypt: likely due to an incorrect password",
+              : "Unable to decrypt: likely due to an incorrect password or encryptionKeySalt",
           });
         }}
       >
         Decrypt File
       </button>
       <label className="form-control w-full">
-        <div className={`label ${!decryptedFileBuffer ? "opacity-10" : ""}`}>
+        <div className={`label ${step !== "download-file" ? "opacity-10" : ""}`}>
           <span className="label-text">File name (include extension - .pdf, .doc, etc.)</span>
         </div>
         <input
           type="text"
-          disabled={!decryptedFileBuffer}
-          value={fileNameAndExtension}
+          disabled={step !== "download-file"}
+          value={step !== "download-file" ? "" : fileNameAndExtension}
           onChange={(x) => setFileNameAndExtension(x.target.value)}
           className="input input-bordered w-full"
         />
@@ -97,7 +103,7 @@ export const Decryption = (p: {
 
       <a
         type="button"
-        className={`btn ${decryptedFileBuffer ? "btn-primary" : "btn-disabled"}`}
+        className={`btn ${step === "download-file" ? "btn-primary" : "btn-disabled"}`}
         href={
           decryptedFileBuffer
             ? URL.createObjectURL(

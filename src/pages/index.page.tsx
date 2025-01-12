@@ -11,7 +11,7 @@ import {
 import { useEffect, useState } from "react";
 
 const Parent = () => {
-  const [setting, setSetting] = useState<"Encrypt" | "Decrypt">("Encrypt");
+  const [mode, setMode] = useState<"Encrypt" | "Decrypt">("Encrypt");
 
   const [password, setPassword] = useState("");
 
@@ -117,29 +117,29 @@ const Parent = () => {
           <div className="card w-full bg-neutral text-neutral-content">
             <div role="tablist" className="tabs tabs-bordered w-full">
               <div
-                onClick={() => setSetting("Encrypt")}
+                onClick={() => setMode("Encrypt")}
                 role="tab"
-                className={`tab h-10 text-lg ${setting === "Encrypt" ? "tab-active" : "font-light opacity-80"}`}
+                className={`tab h-10 text-lg ${mode === "Encrypt" ? "tab-active" : "font-light opacity-80"}`}
               >
                 <span>Encrypt</span>
               </div>
               <div
-                onClick={() => setSetting("Decrypt")}
+                onClick={() => setMode("Decrypt")}
                 role="tab"
-                className={`tab h-10 text-lg ${setting === "Decrypt" ? "tab-active" : "font-light opacity-80"}`}
+                className={`tab h-10 text-lg ${mode === "Decrypt" ? "tab-active" : "font-light opacity-80"}`}
               >
                 <span>Decrypt</span>
               </div>
             </div>
             <div className="card-body">
-              <span className={setting === "Encrypt" ? "" : "hidden"}>
+              <span className={mode === "Encrypt" ? "" : "hidden"}>
                 <Encryption
                   password={password}
                   salt={encryptionKeySalt}
                   initializationVector={initializationVector}
                 />
               </span>
-              <span className={setting === "Decrypt" ? "" : "hidden"}>
+              <span className={mode === "Decrypt" ? "" : "hidden"}>
                 <Decryption
                   password={password}
                   salt={encryptionKeySalt}

@@ -13,17 +13,22 @@ export const Encryption = (p: {
   const [unencryptedFileBuffer, setUnencryptedFileBuffer] = useState<ArrayBuffer>();
   const [encryptedFileBuffer, setEncryptedFileBuffer] = useState<ArrayBuffer>();
 
+  const step = (() => {
+    if (!unencryptedFileBuffer) return "add-file";
+    if (!encryptedFileBuffer) return "encrypt-file";
+    return "download-file";
+  })();
+
   return (
     <span className="flex flex-col gap-4">
       <span className="flex gap-2">
         <input
-          disabled={!!unencryptedFileBuffer}
+          disabled={step !== "add-file"}
           ref={fileUploadElementRef}
           type="file"
           className="file-input w-full cursor-pointer"
           onInput={async () => {
             const fileInput = fileUploadElementRef.current;
-            console.log(`Encryption.tsx:${/*LL*/ 26}`, { fileInput });
             if (!fileInput) return { success: false } as const;
 
             const file = fileInput.files?.[0];
@@ -34,7 +39,7 @@ export const Encryption = (p: {
           }}
         />
         <button
-          disabled={!unencryptedFileBuffer}
+          disabled={step === "add-file"}
           onClick={() => {
             const fileInput = fileUploadElementRef.current;
             if (!fileInput) return { success: false } as const;
@@ -50,7 +55,7 @@ export const Encryption = (p: {
       </span>
 
       <button
-        disabled={!unencryptedFileBuffer || !!encryptedFileBuffer}
+        disabled={step !== "encrypt-file"}
         type="button"
         className="btn btn-primary"
         onClick={async () => {
@@ -75,7 +80,7 @@ export const Encryption = (p: {
 
       <a
         type="button"
-        className={`btn ${encryptedFileBuffer ? "btn-primary" : "btn-disabled"}`}
+        className={`btn ${step === "download-file" ? "btn-primary" : "btn-disabled"}`}
         href={
           encryptedFileBuffer
             ? URL.createObjectURL(
