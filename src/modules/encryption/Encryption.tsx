@@ -78,24 +78,33 @@ export const Encryption = (p: {
         Encrypt File
       </button>
 
-      <a
-        type="button"
-        className={`btn ${step === "download-file" ? "btn-primary" : "btn-disabled"}`}
-        href={
-          encryptedFileBuffer
-            ? URL.createObjectURL(
-                new Blob([encryptedFileBuffer], { type: "application/octet-stream" }),
-              )
-            : "#"
-        }
-        download={
-          fileUploadElementRef.current?.files?.[0]?.name
-            ? `${fileUploadElementRef.current?.files?.[0].name}.bin`
-            : "encryptedFile.bin"
-        }
-      >
-        Download Encrypted File
-      </a>
+      <span className="flex gap-2">
+        <a
+          type="button"
+          className={`btn flex-1 ${step === "download-file" ? "btn-primary" : "btn-disabled"}`}
+          href={
+            encryptedFileBuffer
+              ? URL.createObjectURL(
+                  new Blob([encryptedFileBuffer], { type: "application/octet-stream" }),
+                )
+              : "#"
+          }
+          download={
+            fileUploadElementRef.current?.files?.[0]?.name
+              ? `${fileUploadElementRef.current?.files?.[0].name}.bin`
+              : "encryptedFile.bin"
+          }
+        >
+          \/ Download Encrypted File
+        </a>
+        <button
+          disabled={step !== "download-file"}
+          className="btn btn-primary flex-1"
+          onClick={() => {}}
+        >
+          ^ Upload Encrypted File
+        </button>
+      </span>
     </span>
   );
 };
