@@ -7,57 +7,71 @@ export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: 
   const [decryptedFileBuffer, setDecryptedFileBuffer] = useState<ArrayBuffer>();
 
   return (
-    <span>
-      <span>File to be decrypted:</span>
-      <input
-        disabled={!!encryptedFileBuffer}
-        ref={fileUploadElementRef}
-        type="file"
-        className="file-input w-full max-w-xs"
-        onInput={async () => {
-          const fileInput = fileUploadElementRef.current;
-          if (!fileInput) return { success: false } as const;
+    <span className="flex flex-col gap-4">
+      <span className="flex gap-2">
+        <input
+          disabled={!!encryptedFileBuffer}
+          ref={fileUploadElementRef}
+          type="file"
+          className="file-input w-full"
+          onInput={async () => {
+            const fileInput = fileUploadElementRef.current;
+            if (!fileInput) return { success: false } as const;
 
-          const file = fileInput.files?.[0];
-          if (!file) return { success: false } as const;
+            const file = fileInput.files?.[0];
+            if (!file) return { success: false } as const;
 
-          const fileBuffer = await file.arrayBuffer();
-          setEncryptedFileBuffer(fileBuffer);
-        }}
-      />
-
-      {decryptedFileBuffer && (
-        <a
-          type="button"
-          className="btn btn-primary"
-          href={URL.createObjectURL(
-            new Blob([decryptedFileBuffer], { type: "application/octet-stream" }),
-          )}
-          download="decryptedFile.pdf"
-        >
-          Download Decrypted File
-        </a>
-      )}
-
-      <br />
-
-      {encryptedFileBuffer && !decryptedFileBuffer && (
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={async () => {
-            if (!encryptedFileBuffer) return;
-            const tempDecryptedFile = await decryptFile({
-              initializationVector: p.initializationVector,
-              encryptionKey: p.encryptionKey,
-              encryptedFileBuffer,
-            });
-            setDecryptedFileBuffer(tempDecryptedFile);
+            const fileBuffer = await file.arrayBuffer();
+            setEncryptedFileBuffer(fileBuffer);
           }}
+        />
+        <button
+          disabled={!encryptedFileBuffer}
+          onClick={() => {
+            const fileInput = fileUploadElementRef.current;
+            if (!fileInput) return { success: false } as const;
+
+            fileInput.value = "";
+            setEncryptedFileBuffer(undefined);
+            setDecryptedFileBuffer(undefined);
+          }}
+          className="btn btn-outline"
         >
-          Decrypt File
+          X
         </button>
-      )}
+      </span>
+
+      <button
+        disabled={!encryptedFileBuffer || !!decryptedFileBuffer}
+        type="button"
+        className="btn btn-primary"
+        onClick={async () => {
+          if (!encryptedFileBuffer) return;
+          const tempDecryptedFileBuffer = await decryptFile({
+            initializationVector: p.initializationVector,
+            encryptionKey: p.encryptionKey,
+            encryptedFileBuffer,
+          });
+          setDecryptedFileBuffer(tempDecryptedFileBuffer);
+        }}
+      >
+        Decrypt File
+      </button>
+
+      <a
+        type="button"
+        className={`btn ${decryptedFileBuffer ? "btn-primary" : "btn-disabled"}`}
+        href={
+          decryptedFileBuffer
+            ? URL.createObjectURL(
+                new Blob([decryptedFileBuffer], { type: "application/octet-stream" }),
+              )
+            : "#"
+        }
+        download="decryptedFile.pdf"
+      >
+        Download Decrypted File
+      </a>
     </span>
   );
 };

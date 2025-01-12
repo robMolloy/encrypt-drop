@@ -7,14 +7,13 @@ export const Encryption = (p: { encryptionKey: CryptoKey; initializationVector: 
   const [encryptedFileBuffer, setEncryptedFileBuffer] = useState<ArrayBuffer>();
 
   return (
-    <>
-      <span className="flex gap-4">
-        <span>File to be encrypted:</span>
+    <span className="flex flex-col gap-4">
+      <span className="flex gap-2">
         <input
           disabled={!!unencryptedFileBuffer}
           ref={fileUploadElementRef}
           type="file"
-          className="file-input w-full max-w-xs"
+          className="file-input w-full cursor-pointer"
           onInput={async () => {
             const fileInput = fileUploadElementRef.current;
             if (!fileInput) return { success: false } as const;
@@ -26,38 +25,53 @@ export const Encryption = (p: { encryptionKey: CryptoKey; initializationVector: 
             setUnencryptedFileBuffer(fileBuffer);
           }}
         />
+        <button
+          disabled={!unencryptedFileBuffer}
+          onClick={() => {
+            const fileInput = fileUploadElementRef.current;
+            if (!fileInput) return { success: false } as const;
 
-        {encryptedFileBuffer && (
-          <a
-            type="button"
-            className="btn btn-primary"
-            href={URL.createObjectURL(
-              new Blob([encryptedFileBuffer], { type: "application/octet-stream" }),
-            )}
-            download="encryptedFile.bin"
-          >
-            Download Encrypted File
-          </a>
-        )}
-
-        {unencryptedFileBuffer && !encryptedFileBuffer && (
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={async () => {
-              if (!unencryptedFileBuffer) return;
-              const tempEncryptedFileBuffer = await encryptFile({
-                initializationVector: p.initializationVector,
-                encryptionKey: p.encryptionKey,
-                unencryptedFileBuffer,
-              });
-              setEncryptedFileBuffer(tempEncryptedFileBuffer);
-            }}
-          >
-            Encrypt File
-          </button>
-        )}
+            fileInput.value = "";
+            setUnencryptedFileBuffer(undefined);
+            setEncryptedFileBuffer(undefined);
+          }}
+          className="btn btn-outline"
+        >
+          X
+        </button>
       </span>
-    </>
+
+      <button
+        disabled={!unencryptedFileBuffer || !!encryptedFileBuffer}
+        type="button"
+        className="btn btn-primary"
+        onClick={async () => {
+          if (!unencryptedFileBuffer) return;
+          const tempEncryptedFileBuffer = await encryptFile({
+            initializationVector: p.initializationVector,
+            encryptionKey: p.encryptionKey,
+            unencryptedFileBuffer,
+          });
+          setEncryptedFileBuffer(tempEncryptedFileBuffer);
+        }}
+      >
+        Encrypt File
+      </button>
+
+      <a
+        type="button"
+        className={`btn ${encryptedFileBuffer ? "btn-primary" : "btn-disabled"}`}
+        href={
+          encryptedFileBuffer
+            ? URL.createObjectURL(
+                new Blob([encryptedFileBuffer], { type: "application/octet-stream" }),
+              )
+            : "#"
+        }
+        download="encryptedFile.bin"
+      >
+        Download Encrypted File
+      </a>
+    </span>
   );
 };
