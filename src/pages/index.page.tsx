@@ -24,7 +24,10 @@ const Parent = () => {
     setEncryptionKey(await deriveEncryptionKey({ password: x }));
   };
 
-  const debouncedHandleEncryptionKeyChange = debounce(handleEncryptionKeyChange, 300);
+  const debouncedHandleEncryptionKeyChange = debounce(handleEncryptionKeyChange, 300, {
+    leading: true,
+    trailing: false,
+  });
 
   return (
     <main className={`min-h-screen`}>
@@ -33,9 +36,13 @@ const Parent = () => {
           value={password}
           onChange={async (x) => {
             setPassword(x);
+            if (x === "") return setEncryptionKey(undefined);
             debouncedHandleEncryptionKeyChange(x);
           }}
-          onBlur={(x) => handleEncryptionKeyChange(x)}
+          onBlur={(x) => {
+            if (x === "") return setEncryptionKey(undefined);
+            handleEncryptionKeyChange(x);
+          }}
         />
         <br />
         {(!encryptionKey || !initializationVector) && (
@@ -47,31 +54,31 @@ const Parent = () => {
               <div
                 onClick={() => setSetting("Encrypt")}
                 role="tab"
-                className={`tab h-10 ${setting === "Encrypt" ? "tab-active" : "font-light opacity-80"}`}
+                className={`tab h-10 text-lg ${setting === "Encrypt" ? "tab-active" : "font-light opacity-80"}`}
               >
                 <span>Encrypt</span>
               </div>
               <div
                 onClick={() => setSetting("Decrypt")}
                 role="tab"
-                className={`tab h-10 ${setting === "Decrypt" ? "tab-active" : "font-light opacity-80"}`}
+                className={`tab h-10 text-lg ${setting === "Decrypt" ? "tab-active" : "font-light opacity-80"}`}
               >
                 <span>Decrypt</span>
               </div>
             </div>
             <div className="card-body">
-              {setting === "Encrypt" && encryptionKey && initializationVector && (
+              <span className={setting === "Encrypt" ? "" : "hidden"}>
                 <Encryption
                   encryptionKey={encryptionKey}
                   initializationVector={initializationVector}
                 />
-              )}
-              {setting === "Decrypt" && encryptionKey && initializationVector && (
+              </span>
+              <span className={setting === "Decrypt" ? "" : "hidden"}>
                 <Decryption
                   encryptionKey={encryptionKey}
                   initializationVector={initializationVector}
                 />
-              )}
+              </span>
             </div>
           </div>
         )}
