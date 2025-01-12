@@ -3,8 +3,6 @@ export const generateInitializationVector = async () => {
 };
 
 export const deriveEncryptionKey = async (x: { password: string; salt: Uint8Array }) => {
-  const salt = x.salt;
-
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
@@ -14,12 +12,7 @@ export const deriveEncryptionKey = async (x: { password: string; salt: Uint8Arra
     ["deriveKey"],
   );
   return crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt,
-      iterations: 100000,
-      hash: "SHA-256",
-    },
+    { name: "PBKDF2", salt: x.salt, iterations: 100000, hash: "SHA-256" },
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     true,
@@ -58,6 +51,27 @@ export const encryptFile = async (x: {
       x.unencryptedFileBuffer,
     );
     return { success: true, data: encryptedFile } as const;
+  } catch (e) {
+    const error = e as { message: string };
+    return { success: false, error } as const;
+  }
+};
+
+export const serializeUInt8Array = (arr: Uint8Array) => {
+  const serialized = btoa(String.fromCharCode(...Array.from(arr)));
+  return serialized;
+};
+
+export const deserializeUInt8Array = (str: string) => {
+  try {
+    const decodedString = atob(str);
+
+    const deserializedArray = new Uint8Array(decodedString.length);
+    for (let i = 0; i < decodedString.length; i++) {
+      deserializedArray[i] = decodedString.charCodeAt(i);
+    }
+
+    return { success: true, data: deserializedArray } as const;
   } catch (e) {
     const error = e as { message: string };
     return { success: false, error } as const;
