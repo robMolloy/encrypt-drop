@@ -7,13 +7,12 @@ export const useEmulator = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "tr
 export const emulatorOffline = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR_OFFLINE === "true";
 
 const initFirebaseConfig = {
-  apiKey: "AIzaSyBSTs7Lj0jmNn6Y0wrz-KSKVWN6DXusy-Q",
-  authDomain: "next-firebase-emulator.firebaseapp.com",
-  projectId: "next-firebase-emulator",
-  storageBucket: "next-firebase-emulator.appspot.com",
-  messagingSenderId: "1064012878807",
-  appId: "1:1064012878807:web:76cdd163fc5277b2ceb192",
-  measurementId: "G-V4DV7EWKPV",
+  apiKey: "AIzaSyCewPJhmBtpn6QWXhx2MRrtY7UxaOZfOW4",
+  authDomain: "encryptdrop.firebaseapp.com",
+  projectId: "encryptdrop",
+  storageBucket: "encryptdrop.firebasestorage.app",
+  messagingSenderId: "352557738491",
+  appId: "1:352557738491:web:6cf71ea7f33e25475a835e",
 };
 const projectId = `${useEmulator ? "demo-" : ""}${initFirebaseConfig.projectId}`;
 const firebaseConfig = { ...initFirebaseConfig, projectId };

@@ -1,6 +1,11 @@
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
-import { encryptFile } from "./utils";
+import { encryptFile, serializeUInt8Array } from "./utils";
+import { filesSdk } from "@/utils/firestoreSdkUtils.ts/firestoreFilesSdk";
+import { db } from "@/config/firebaseConfig";
+import { v4 as uuid } from "uuid";
+import { serverTimestamp } from "firebase/firestore";
+import { creatifyDoc } from "@/utils/firestoreSdkUtils.ts/firestoreUtils";
 
 export const Encryption = (p: {
   password: string;
@@ -18,6 +23,10 @@ export const Encryption = (p: {
     if (!encryptedFileBuffer) return "encrypt-file";
     return "download-file";
   })();
+
+  const fileName = fileUploadElementRef.current?.files?.[0]?.name
+    ? `${fileUploadElementRef.current?.files?.[0].name}.bin`
+    : "encryptedFile.bin";
 
   return (
     <span className="flex flex-col gap-4">
@@ -100,7 +109,19 @@ export const Encryption = (p: {
         <button
           disabled={step !== "download-file"}
           className="btn btn-primary flex-1"
-          onClick={() => {}}
+          onClick={async () => {
+            const response = await filesSdk.setDoc({
+              db,
+              data: creatifyDoc({
+                id: uuid(),
+                name: fileName,
+                serializedEncryptionKeySalt: serializeUInt8Array(p.salt),
+                updatedAt: serverTimestamp(),
+                createdAt: serverTimestamp(),
+              }),
+            });
+            console.log(`Encryption.tsx:${/*LL*/ 123}`, response);
+          }}
         >
           ^ Upload Encrypted File
         </button>
