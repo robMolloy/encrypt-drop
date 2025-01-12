@@ -2,8 +2,8 @@ export const generateInitializationVector = async () => {
   return window.crypto.getRandomValues(new Uint8Array(12));
 };
 
-export const deriveEncryptionKey = async (x: { password: string; salt?: Uint8Array }) => {
-  const salt = x.salt ? x.salt : crypto.getRandomValues(new Uint8Array(16));
+export const deriveEncryptionKey = async (x: { password: string; salt: Uint8Array }) => {
+  const salt = x.salt;
 
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
@@ -27,23 +27,23 @@ export const deriveEncryptionKey = async (x: { password: string; salt?: Uint8Arr
   );
 };
 
-// const generateEncryptionKey = async () => {
-//   return window.crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, [
-//     "encrypt",
-//     "decrypt",
-//   ]);
-// };
-
 export const decryptFile = async (x: {
   initializationVector: Uint8Array;
   encryptionKey: CryptoKey;
   encryptedFileBuffer: ArrayBuffer;
 }) => {
-  return window.crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: x.initializationVector },
-    x.encryptionKey,
-    x.encryptedFileBuffer,
-  );
+  try {
+    const decryptedFile = await window.crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: x.initializationVector },
+      x.encryptionKey,
+      x.encryptedFileBuffer,
+    );
+
+    return { success: true, data: decryptedFile } as const;
+  } catch (e) {
+    const error = e as { message: string };
+    return { success: false, error } as const;
+  }
 };
 
 export const encryptFile = async (x: {
@@ -51,9 +51,15 @@ export const encryptFile = async (x: {
   encryptionKey: CryptoKey;
   unencryptedFileBuffer: ArrayBuffer;
 }) => {
-  return window.crypto.subtle.encrypt(
-    { name: "AES-GCM", iv: x.initializationVector },
-    x.encryptionKey,
-    x.unencryptedFileBuffer,
-  );
+  try {
+    const encryptedFile = await window.crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: x.initializationVector },
+      x.encryptionKey,
+      x.unencryptedFileBuffer,
+    );
+    return { success: true, data: encryptedFile } as const;
+  } catch (e) {
+    const error = e as { message: string };
+    return { success: false, error } as const;
+  }
 };

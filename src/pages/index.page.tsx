@@ -21,7 +21,8 @@ const Parent = () => {
   }, []);
 
   const handleEncryptionKeyChange = async (x: string) => {
-    setEncryptionKey(await deriveEncryptionKey({ password: x }));
+    if (initializationVector === undefined) return;
+    setEncryptionKey(await deriveEncryptionKey({ password: x, salt: initializationVector }));
   };
 
   const debouncedHandleEncryptionKeyChange = debounce(handleEncryptionKeyChange, 300, {

@@ -1,10 +1,17 @@
+import { useNotifyStore } from "../notify";
 import { decryptFile } from "./utils";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: Uint8Array }) => {
+  const notifyStore = useNotifyStore();
+
   const fileUploadElementRef = useRef<HTMLInputElement>(null);
   const [encryptedFileBuffer, setEncryptedFileBuffer] = useState<ArrayBuffer>();
   const [decryptedFileBuffer, setDecryptedFileBuffer] = useState<ArrayBuffer>();
+
+  useEffect(() => {
+    setDecryptedFileBuffer(undefined);
+  }, [p.encryptionKey, p.initializationVector]);
 
   return (
     <span className="flex flex-col gap-4">
@@ -47,12 +54,19 @@ export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: 
         className="btn btn-primary"
         onClick={async () => {
           if (!encryptedFileBuffer) return;
-          const tempDecryptedFileBuffer = await decryptFile({
+          const response = await decryptFile({
             initializationVector: p.initializationVector,
             encryptionKey: p.encryptionKey,
             encryptedFileBuffer,
           });
-          setDecryptedFileBuffer(tempDecryptedFileBuffer);
+
+          if (response.success) return setDecryptedFileBuffer(response.data);
+          notifyStore.push({
+            type: "alert-warning",
+            children: response.error.message
+              ? response.error.message
+              : "Unable to decrypt: likely due to an incorrect password",
+          });
         }}
       >
         Decrypt File

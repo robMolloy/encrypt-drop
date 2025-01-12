@@ -1,10 +1,17 @@
+import { useNotifyStore } from "../notify";
 import { encryptFile } from "./utils";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const Encryption = (p: { encryptionKey: CryptoKey; initializationVector: Uint8Array }) => {
+  const notifyStore = useNotifyStore();
+
   const fileUploadElementRef = useRef<HTMLInputElement>(null);
   const [unencryptedFileBuffer, setUnencryptedFileBuffer] = useState<ArrayBuffer>();
   const [encryptedFileBuffer, setEncryptedFileBuffer] = useState<ArrayBuffer>();
+
+  useEffect(() => {
+    setEncryptedFileBuffer(undefined);
+  }, [p.encryptionKey, p.initializationVector]);
 
   return (
     <span className="flex flex-col gap-4">
@@ -47,12 +54,18 @@ export const Encryption = (p: { encryptionKey: CryptoKey; initializationVector: 
         className="btn btn-primary"
         onClick={async () => {
           if (!unencryptedFileBuffer) return;
-          const tempEncryptedFileBuffer = await encryptFile({
+
+          const response = await encryptFile({
             initializationVector: p.initializationVector,
             encryptionKey: p.encryptionKey,
             unencryptedFileBuffer,
           });
-          setEncryptedFileBuffer(tempEncryptedFileBuffer);
+
+          if (response.success) return setEncryptedFileBuffer(response.data);
+          notifyStore.push({
+            type: "alert-warning",
+            children: response.error.message ? response.error.message : "Unable to encrypt",
+          });
         }}
       >
         Encrypt File
