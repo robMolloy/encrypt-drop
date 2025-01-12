@@ -8,26 +8,23 @@ export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: 
 
   return (
     <span>
-      {!encryptedFileBuffer && (
-        <>
-          <span>File to be decrypted:</span>
-          <input
-            ref={fileUploadElementRef}
-            type="file"
-            className="file-input w-full max-w-xs"
-            onInput={async () => {
-              const fileInput = fileUploadElementRef.current;
-              if (!fileInput) return { success: false } as const;
+      <span>File to be decrypted:</span>
+      <input
+        disabled={!!encryptedFileBuffer}
+        ref={fileUploadElementRef}
+        type="file"
+        className="file-input w-full max-w-xs"
+        onInput={async () => {
+          const fileInput = fileUploadElementRef.current;
+          if (!fileInput) return { success: false } as const;
 
-              const file = fileInput.files?.[0];
-              if (!file) return { success: false } as const;
+          const file = fileInput.files?.[0];
+          if (!file) return { success: false } as const;
 
-              const fileBuffer = await file.arrayBuffer();
-              setEncryptedFileBuffer(fileBuffer);
-            }}
-          />
-        </>
-      )}
+          const fileBuffer = await file.arrayBuffer();
+          setEncryptedFileBuffer(fileBuffer);
+        }}
+      />
 
       {decryptedFileBuffer && (
         <a
@@ -61,9 +58,6 @@ export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: 
           Decrypt File
         </button>
       )}
-
-      <br />
-      <pre>{JSON.stringify({ encryptedFileBuffer, decryptedFileBuffer, p }, undefined, 2)}</pre>
     </span>
   );
 };

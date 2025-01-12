@@ -44,7 +44,7 @@ const Parent = () => {
             setPassword(x);
             debouncedHandleEncryptionKeyChange(x);
           }}
-          onBlur={handleEncryptionKeyChange}
+          onBlur={(x) => handleEncryptionKeyChange(x)}
         />
 
         <br />
