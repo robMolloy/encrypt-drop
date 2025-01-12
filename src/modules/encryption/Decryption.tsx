@@ -1,17 +1,27 @@
+import { useEffect, useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
 import { decryptFile } from "./utils";
-import { useEffect, useRef, useState } from "react";
 
-export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: Uint8Array }) => {
+export const Decryption = (p: {
+  password: string;
+  salt: Uint8Array;
+  initializationVector: Uint8Array;
+}) => {
   const notifyStore = useNotifyStore();
 
   const fileUploadElementRef = useRef<HTMLInputElement>(null);
   const [encryptedFileBuffer, setEncryptedFileBuffer] = useState<ArrayBuffer>();
   const [decryptedFileBuffer, setDecryptedFileBuffer] = useState<ArrayBuffer>();
+  const [fileNameAndExtension, setFileNameAndExtension] = useState<string>("");
 
   useEffect(() => {
-    setDecryptedFileBuffer(undefined);
-  }, [p.encryptionKey, p.initializationVector]);
+    const tempFileName = fileUploadElementRef.current?.files?.[0]?.name;
+    if (!tempFileName) return setFileNameAndExtension("");
+
+    const newFileName =
+      tempFileName.slice(-4) === ".bin" ? tempFileName.slice(0, -4) : tempFileName;
+    setFileNameAndExtension(newFileName);
+  }, [fileUploadElementRef.current?.files?.[0]]);
 
   return (
     <span className="flex flex-col gap-4">
@@ -56,7 +66,8 @@ export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: 
           if (!encryptedFileBuffer) return;
           const response = await decryptFile({
             initializationVector: p.initializationVector,
-            encryptionKey: p.encryptionKey,
+            password: p.password,
+            salt: p.salt,
             encryptedFileBuffer,
           });
 
@@ -71,6 +82,18 @@ export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: 
       >
         Decrypt File
       </button>
+      <label className="form-control w-full">
+        <div className={`label ${!decryptedFileBuffer ? "opacity-10" : ""}`}>
+          <span className="label-text">File name (include extension - .pdf, .doc, etc.)</span>
+        </div>
+        <input
+          type="text"
+          disabled={!decryptedFileBuffer}
+          value={fileNameAndExtension}
+          onChange={(x) => setFileNameAndExtension(x.target.value)}
+          className="input input-bordered w-full"
+        />
+      </label>
 
       <a
         type="button"
@@ -82,7 +105,7 @@ export const Decryption = (p: { encryptionKey: CryptoKey; initializationVector: 
               )
             : "#"
         }
-        download="decryptedFile.pdf"
+        download={fileNameAndExtension}
       >
         Download Decrypted File
       </a>

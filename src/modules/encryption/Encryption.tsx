@@ -1,17 +1,17 @@
+import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
 import { encryptFile } from "./utils";
-import { useEffect, useRef, useState } from "react";
 
-export const Encryption = (p: { encryptionKey: CryptoKey; initializationVector: Uint8Array }) => {
+export const Encryption = (p: {
+  password: string;
+  salt: Uint8Array;
+  initializationVector: Uint8Array;
+}) => {
   const notifyStore = useNotifyStore();
 
   const fileUploadElementRef = useRef<HTMLInputElement>(null);
   const [unencryptedFileBuffer, setUnencryptedFileBuffer] = useState<ArrayBuffer>();
   const [encryptedFileBuffer, setEncryptedFileBuffer] = useState<ArrayBuffer>();
-
-  useEffect(() => {
-    setEncryptedFileBuffer(undefined);
-  }, [p.encryptionKey, p.initializationVector]);
 
   return (
     <span className="flex flex-col gap-4">
@@ -23,6 +23,7 @@ export const Encryption = (p: { encryptionKey: CryptoKey; initializationVector: 
           className="file-input w-full cursor-pointer"
           onInput={async () => {
             const fileInput = fileUploadElementRef.current;
+            console.log(`Encryption.tsx:${/*LL*/ 26}`, { fileInput });
             if (!fileInput) return { success: false } as const;
 
             const file = fileInput.files?.[0];
@@ -57,7 +58,8 @@ export const Encryption = (p: { encryptionKey: CryptoKey; initializationVector: 
 
           const response = await encryptFile({
             initializationVector: p.initializationVector,
-            encryptionKey: p.encryptionKey,
+            password: p.password,
+            salt: p.salt,
             unencryptedFileBuffer,
           });
 
@@ -81,7 +83,11 @@ export const Encryption = (p: { encryptionKey: CryptoKey; initializationVector: 
               )
             : "#"
         }
-        download="encryptedFile.bin"
+        download={
+          fileUploadElementRef.current?.files?.[0]?.name
+            ? `${fileUploadElementRef.current?.files?.[0].name}.bin`
+            : "encryptedFile.bin"
+        }
       >
         Download Encrypted File
       </a>

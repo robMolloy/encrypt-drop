@@ -5,6 +5,9 @@ import {
   PasswordInput,
   deriveEncryptionKey,
   generateInitializationVector,
+  generateSalt as generateEncryptionKeySalt,
+  serializeUInt8Array,
+  deserializeUInt8Array,
 } from "@/modules/encryption";
 import { useEffect, useState } from "react";
 import debounce from "lodash/debounce";
@@ -14,15 +17,35 @@ const Parent = () => {
 
   const [password, setPassword] = useState("");
   const [encryptionKey, setEncryptionKey] = useState<CryptoKey>();
+
   const [initializationVector, setInitializationVector] = useState<Uint8Array>();
+  const [encryptionKeySalt, setEncryptionKeySalt] = useState<Uint8Array>();
+
+  const [serialisedEncryptionKeySalt, setSerialisedEncryptionKeySalt] = useState<string>("");
+  const [serialisedInitializationVector, setSerialisedInitializationVector] = useState<string>("");
 
   useEffect(() => {
-    (async () => setInitializationVector(await generateInitializationVector()))();
+    (async () => {
+      setSerialisedEncryptionKeySalt(serializeUInt8Array(await generateEncryptionKeySalt()));
+      setSerialisedInitializationVector(serializeUInt8Array(await generateInitializationVector()));
+    })();
   }, []);
 
+  useEffect(() => {
+    if (!serialisedEncryptionKeySalt) return;
+    const response = deserializeUInt8Array(serialisedEncryptionKeySalt);
+    setEncryptionKeySalt(response.success ? response.data : undefined);
+  }, [serialisedEncryptionKeySalt]);
+
+  useEffect(() => {
+    if (!serialisedInitializationVector) return;
+    const response = deserializeUInt8Array(serialisedInitializationVector);
+    setInitializationVector(response.success ? response.data : undefined);
+  }, [serialisedInitializationVector]);
+
   const handleEncryptionKeyChange = async (x: string) => {
-    if (initializationVector === undefined) return;
-    setEncryptionKey(await deriveEncryptionKey({ password: x, salt: initializationVector }));
+    if (!initializationVector || !encryptionKeySalt) return;
+    setEncryptionKey(await deriveEncryptionKey({ password: x, salt: encryptionKeySalt }));
   };
 
   const debouncedHandleEncryptionKeyChange = debounce(handleEncryptionKeyChange, 300, {
@@ -46,10 +69,86 @@ const Parent = () => {
           }}
         />
         <br />
-        {(!encryptionKey || !initializationVector) && (
+        <div className="collapse bg-base-200">
+          <input type="checkbox" />
+          <div className="collapse-title text-xl font-medium">Click to review keys</div>
+          <div className="collapse-content">
+            <p>
+              These are the keys used to encrypt and decrypt the file. The Initialisation Vector is
+              used to encrypt the file is not required to decrypt the file, but it is important that
+              the Encryption Key Salt is kept like a password. If you lose the Encryption Key Salt
+              or the password there is no way to decrypt the file.
+            </p>
+            <span className="flex items-end gap-2">
+              <label className="form-control w-full">
+                <div className="label">
+                  <span className="label-text">Serialized Encryption Key Salt</span>
+                </div>
+                <input
+                  type="text"
+                  value={serialisedEncryptionKeySalt}
+                  onChange={(x) => setSerialisedEncryptionKeySalt(x.target.value)}
+                  placeholder="Type here"
+                  className="input input-bordered w-full"
+                />
+              </label>
+              <button
+                className="btn btn-primary"
+                onClick={async () => {
+                  const tempEncryptionKeySalt = await generateEncryptionKeySalt();
+                  setSerialisedEncryptionKeySalt(serializeUInt8Array(tempEncryptionKeySalt));
+                }}
+              >
+                New
+              </button>
+            </span>
+            <span className="flex items-end gap-2">
+              <label className="form-control w-full">
+                <div className="label">
+                  <span className="label-text">Serialized Initialisation Vector</span>
+                </div>
+                <input
+                  type="text"
+                  value={serialisedInitializationVector}
+                  onChange={(x) => setSerialisedInitializationVector(x.target.value)}
+                  placeholder="Type here"
+                  className="input input-bordered w-full"
+                />
+              </label>
+              <button
+                className="btn btn-primary"
+                onClick={async () => {
+                  const tempInitializationVector = await generateInitializationVector();
+                  setSerialisedInitializationVector(serializeUInt8Array(tempInitializationVector));
+                }}
+              >
+                New
+              </button>
+            </span>
+            <div>ec {encryptionKeySalt ? serializeUInt8Array(encryptionKeySalt) : ""}</div>
+            <div>iv {initializationVector ? serializeUInt8Array(initializationVector) : ""}</div>
+            <div>
+              ec{" "}
+              {(encryptionKeySalt ? serializeUInt8Array(encryptionKeySalt) : "") ===
+              serialisedEncryptionKeySalt
+                ? "true"
+                : "false"}
+            </div>
+            <div>
+              iv{" "}
+              {(initializationVector ? serializeUInt8Array(initializationVector) : "") ===
+              serialisedInitializationVector
+                ? "true"
+                : "false"}
+            </div>
+          </div>
+        </div>
+
+        <br />
+        {(!encryptionKey || !initializationVector || !encryptionKeySalt) && (
           <div>A password is required to encrypt or decrypt a file</div>
         )}
-        {encryptionKey && initializationVector && (
+        {encryptionKey && initializationVector && encryptionKeySalt && (
           <div className="card w-full bg-neutral text-neutral-content">
             <div role="tablist" className="tabs tabs-bordered w-full">
               <div
@@ -70,13 +169,15 @@ const Parent = () => {
             <div className="card-body">
               <span className={setting === "Encrypt" ? "" : "hidden"}>
                 <Encryption
-                  encryptionKey={encryptionKey}
+                  password={password}
+                  salt={encryptionKeySalt}
                   initializationVector={initializationVector}
                 />
               </span>
               <span className={setting === "Decrypt" ? "" : "hidden"}>
                 <Decryption
-                  encryptionKey={encryptionKey}
+                  password={password}
+                  salt={encryptionKeySalt}
                   initializationVector={initializationVector}
                 />
               </span>
