@@ -1,7 +1,7 @@
 export const generateInitializationVector = async () => {
   return crypto.getRandomValues(new Uint8Array(12));
 };
-export const generateSalt = async () => {
+export const generateEncryptionKeySalt = async () => {
   return crypto.getRandomValues(new Uint8Array(16));
 };
 

@@ -1,7 +1,7 @@
 export const PasswordInput = (p: {
   value: string;
   onChange: (x: string) => void;
-  onBlur: (x: string) => void;
+  onBlur?: (x: string) => void;
 }) => {
   return (
     <label className="form-control w-full">
@@ -25,7 +25,9 @@ export const PasswordInput = (p: {
         <input
           value={p.value}
           onChange={(e) => p.onChange(e.target.value)}
-          onBlur={() => p.onBlur(p.value)}
+          onBlur={() => {
+            if (p.onBlur) p.onBlur(p.value);
+          }}
           type="password"
           className="w-full"
         />

@@ -3,26 +3,23 @@ import {
   Decryption,
   Encryption,
   PasswordInput,
-  deriveEncryptionKey,
-  generateInitializationVector,
-  generateSalt as generateEncryptionKeySalt,
-  serializeUInt8Array,
   deserializeUInt8Array,
+  generateEncryptionKeySalt,
+  generateInitializationVector,
+  serializeUInt8Array,
 } from "@/modules/encryption";
 import { useEffect, useState } from "react";
-import debounce from "lodash/debounce";
 
 const Parent = () => {
   const [setting, setSetting] = useState<"Encrypt" | "Decrypt">("Encrypt");
 
   const [password, setPassword] = useState("");
-  const [encryptionKey, setEncryptionKey] = useState<CryptoKey>();
-
-  const [initializationVector, setInitializationVector] = useState<Uint8Array>();
-  const [encryptionKeySalt, setEncryptionKeySalt] = useState<Uint8Array>();
 
   const [serialisedEncryptionKeySalt, setSerialisedEncryptionKeySalt] = useState<string>("");
+  const [encryptionKeySalt, setEncryptionKeySalt] = useState<Uint8Array>();
+
   const [serialisedInitializationVector, setSerialisedInitializationVector] = useState<string>("");
+  const [initializationVector, setInitializationVector] = useState<Uint8Array>();
 
   useEffect(() => {
     (async () => {
@@ -43,16 +40,6 @@ const Parent = () => {
     setInitializationVector(response.success ? response.data : undefined);
   }, [serialisedInitializationVector]);
 
-  const handleEncryptionKeyChange = async (x: string) => {
-    if (!initializationVector || !encryptionKeySalt) return;
-    setEncryptionKey(await deriveEncryptionKey({ password: x, salt: encryptionKeySalt }));
-  };
-
-  const debouncedHandleEncryptionKeyChange = debounce(handleEncryptionKeyChange, 300, {
-    leading: true,
-    trailing: false,
-  });
-
   return (
     <main className={`min-h-screen`}>
       <Typography fullPage>
@@ -60,12 +47,6 @@ const Parent = () => {
           value={password}
           onChange={async (x) => {
             setPassword(x);
-            if (x === "") return setEncryptionKey(undefined);
-            debouncedHandleEncryptionKeyChange(x);
-          }}
-          onBlur={(x) => {
-            if (x === "") return setEncryptionKey(undefined);
-            handleEncryptionKeyChange(x);
           }}
         />
         <br />
@@ -125,30 +106,14 @@ const Parent = () => {
                 New
               </button>
             </span>
-            <div>ec {encryptionKeySalt ? serializeUInt8Array(encryptionKeySalt) : ""}</div>
-            <div>iv {initializationVector ? serializeUInt8Array(initializationVector) : ""}</div>
-            <div>
-              ec{" "}
-              {(encryptionKeySalt ? serializeUInt8Array(encryptionKeySalt) : "") ===
-              serialisedEncryptionKeySalt
-                ? "true"
-                : "false"}
-            </div>
-            <div>
-              iv{" "}
-              {(initializationVector ? serializeUInt8Array(initializationVector) : "") ===
-              serialisedInitializationVector
-                ? "true"
-                : "false"}
-            </div>
           </div>
         </div>
 
         <br />
-        {(!encryptionKey || !initializationVector || !encryptionKeySalt) && (
+        {(!password || !initializationVector || !encryptionKeySalt) && (
           <div>A password is required to encrypt or decrypt a file</div>
         )}
-        {encryptionKey && initializationVector && encryptionKeySalt && (
+        {password && initializationVector && encryptionKeySalt && (
           <div className="card w-full bg-neutral text-neutral-content">
             <div role="tablist" className="tabs tabs-bordered w-full">
               <div
