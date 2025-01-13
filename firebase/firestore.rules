@@ -1,15 +1,59 @@
 rules_version = '2';
 
+function getIncomingAuth() {
+  return request.auth;
+}
+function getIncomingId() {
+  return request.resource.id;
+}
+function getIncomingData() {
+  return request.resource.data;
+}
+function isNow(dt) {
+  return dt is timestamp && dt == request.time;
+}
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-		match /files/{id} {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    match /balance/{id} {
+      allow create: if true;
       allow get: if false;
       allow list: if false;
-      allow create: if true;
       allow update: if false;
       allow delete: if false;
     }
+    match /files/{id} {
+      function getFilesKeys(){
+        return ['id', 'uid', 'name', 'serializedEncryptionKeySalt', 'createdAt', 'updatedAt'];
+      }
+      function checkFileDataTypes(){
+        let incoming = getIncomingData();
+        let keys = getFilesKeys();
 
+        return incoming.keys().hasAll(keys)
+          && incoming.keys().hasOnly(keys)
+          && incoming.id == getIncomingId()
+          && incoming.uid == getIncomingAuth().uid
+          && incoming.name is string
+          && incoming.serializedEncryptionKeySalt is string
+          && incoming.createdAt is timestamp
+          && incoming.updatedAt is timestamp
+      }
+      function canCreateFile(){
+        let incoming = getIncomingData();
+
+        return checkFileDataTypes()
+          && isNow(incoming.createdAt)
+          && isNow(incoming.updatedAt)
+      }
+      allow create: if canCreateFile();
+      allow get: if false;
+      allow list: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
   }
 }

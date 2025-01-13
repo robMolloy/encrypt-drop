@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
 import { encryptFile, serializeUInt8Array } from "./utils";
-import { filesSdk } from "@/utils/firestoreSdkUtils.ts/firestoreFilesSdk";
-import { db } from "@/config/firebaseConfig";
+import { filesSdk } from "@/db/firestoreFilesSdk";
+import { auth, db } from "@/config/firebaseConfig";
 import { v4 as uuid } from "uuid";
 import { serverTimestamp } from "firebase/firestore";
-import { creatifyDoc } from "@/utils/firestoreSdkUtils.ts/firestoreUtils";
+import { creatifyDoc } from "@/utils/firestoreSdkUtils/firestoreUtils";
 
 export const Encryption = (p: {
   password: string;
@@ -110,11 +110,14 @@ export const Encryption = (p: {
           disabled={step !== "download-file"}
           className="btn btn-primary flex-1"
           onClick={async () => {
+            const uid = auth.currentUser?.uid;
+            if (!uid) return;
             const response = await filesSdk.setDoc({
               db,
               data: creatifyDoc({
                 id: uuid(),
                 name: fileName,
+                uid: uid,
                 serializedEncryptionKeySalt: serializeUInt8Array(p.salt),
                 updatedAt: serverTimestamp(),
                 createdAt: serverTimestamp(),

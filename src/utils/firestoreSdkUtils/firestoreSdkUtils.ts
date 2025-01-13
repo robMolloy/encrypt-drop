@@ -16,6 +16,7 @@ import { TServerTimestamp } from "./firestoreUtils";
 
 // export type TDb = ReturnType<ReturnType<RulesTestEnvironment["authenticatedContext"]>["firestore"]>;
 export type TDb = Firestore;
+export const timestampSchema = z.object({ seconds: z.number(), nanoseconds: z.number() });
 
 type CreatifyDoc<T1 extends object> = Omit<T1, "createdAt" | "updatedAt"> & {
   createdAt: TServerTimestamp;
