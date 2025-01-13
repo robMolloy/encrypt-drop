@@ -1,11 +1,10 @@
+import { auth, db } from "@/config/firebaseConfig";
+import { balancesSdk } from "@/db/firestoreBalancesSdk";
+import { filesSdk } from "@/db/firestoreFilesSdk";
+import { creatifyDoc, updatifyDoc } from "@/utils/firestoreSdkUtils/firestoreUtils";
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
 import { encryptFile, serializeUInt8Array } from "./utils";
-import { filesSdk } from "@/db/firestoreFilesSdk";
-import { auth, db } from "@/config/firebaseConfig";
-import { v4 as uuid } from "uuid";
-import { serverTimestamp } from "firebase/firestore";
-import { creatifyDoc } from "@/utils/firestoreSdkUtils/firestoreUtils";
 
 export const Encryption = (p: {
   password: string;
@@ -112,18 +111,28 @@ export const Encryption = (p: {
           onClick={async () => {
             const uid = auth.currentUser?.uid;
             if (!uid) return;
+
+            const balancesResponse = await balancesSdk.getDoc({ db, id: uid });
+            console.log(`Encryption.tsx:${/*LL*/ 116}`, balancesResponse);
+            if (!balancesResponse.success) return;
+
+            const balance = balancesResponse.data;
             const response = await filesSdk.setDoc({
               db,
               data: creatifyDoc({
-                id: uuid(),
+                id: `${uid}_${balance.couponStream}_${balance.numberOfCoupons}`,
                 name: fileName,
                 uid: uid,
                 serializedEncryptionKeySalt: serializeUInt8Array(p.salt),
-                updatedAt: serverTimestamp(),
-                createdAt: serverTimestamp(),
               }),
             });
-            console.log(`Encryption.tsx:${/*LL*/ 123}`, response);
+            console.log(`Encryption.tsx:${/*LL*/ 129}`, response);
+
+            const updatedBalanceResponse = await balancesSdk.updateDoc({
+              db,
+              data: updatifyDoc({ ...balance, numberOfCoupons: balance.numberOfCoupons - 1 }),
+            });
+            console.log(`Encryption.tsx:${/*LL*/ 137}`, updatedBalanceResponse);
           }}
         >
           ^ Upload Encrypted File

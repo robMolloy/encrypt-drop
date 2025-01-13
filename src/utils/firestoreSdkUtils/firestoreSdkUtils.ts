@@ -55,10 +55,20 @@ export const createSafeSdk = <T1 extends z.ZodObject<{ id: z.ZodString }>>(x: {
   collectionName: string;
   schema: T1;
 }) => {
-  const getSafeDoc = async (p: { db: TDb; id: string }) => {
-    const docRef = doc(p.db, x.collectionName, p.id);
-    const result = await getDoc(docRef);
-    return x.schema.safeParse(result.data());
+  const getSafeDoc = async (p: {
+    db: TDb;
+    id: string;
+  }): Promise<
+    { success: true; data: z.infer<T1> } | { success: false; error: { message: string } }
+  > => {
+    try {
+      const docRef = doc(p.db, x.collectionName, p.id);
+      const result = await getDoc(docRef);
+      return x.schema.safeParse(result.data());
+    } catch (e) {
+      const error = e as { message: string };
+      return { success: false, error };
+    }
   };
 
   return {
