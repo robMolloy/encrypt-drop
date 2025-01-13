@@ -3,7 +3,7 @@ import { createSafeSdk, timestampSchema } from "@/utils/firestoreSdkUtils/firest
 
 const balancesCollectionName = "balances";
 
-const balanceSchema = z.object({
+export const balanceSchema = z.object({
   id: z.string(),
   uid: z.string(),
   couponStream: z.number(),

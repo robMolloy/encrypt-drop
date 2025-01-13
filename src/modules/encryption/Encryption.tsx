@@ -1,6 +1,6 @@
 import { auth, db } from "@/config/firebaseConfig";
 import { balancesSdk } from "@/db/firestoreBalancesSdk";
-import { filesSdk } from "@/db/firestoreFilesSdk";
+import { filesSdk, getNextFileId } from "@/db/firestoreFilesSdk";
 import { creatifyDoc, updatifyDoc } from "@/utils/firestoreSdkUtils/firestoreUtils";
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
@@ -113,26 +113,23 @@ export const Encryption = (p: {
             if (!uid) return;
 
             const balancesResponse = await balancesSdk.getDoc({ db, id: uid });
-            console.log(`Encryption.tsx:${/*LL*/ 116}`, balancesResponse);
             if (!balancesResponse.success) return;
 
             const balance = balancesResponse.data;
-            const response = await filesSdk.setDoc({
+            await filesSdk.setDoc({
               db,
               data: creatifyDoc({
-                id: `${uid}_${balance.couponStream}_${balance.numberOfCoupons}`,
+                id: getNextFileId({ balance }),
                 name: fileName,
                 uid: uid,
                 serializedEncryptionKeySalt: serializeUInt8Array(p.salt),
               }),
             });
-            console.log(`Encryption.tsx:${/*LL*/ 129}`, response);
 
-            const updatedBalanceResponse = await balancesSdk.updateDoc({
+            await balancesSdk.updateDoc({
               db,
               data: updatifyDoc({ ...balance, numberOfCoupons: balance.numberOfCoupons - 1 }),
             });
-            console.log(`Encryption.tsx:${/*LL*/ 137}`, updatedBalanceResponse);
           }}
         >
           ^ Upload Encrypted File

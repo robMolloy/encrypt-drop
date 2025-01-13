@@ -67,6 +67,7 @@ export const createSafeSdk = <T1 extends z.ZodObject<{ id: z.ZodString }>>(x: {
       return x.schema.safeParse(result.data());
     } catch (e) {
       const error = e as { message: string };
+      console.error(`firestoreSdkUtils.ts:${/*LL*/ 81}`, error);
       return { success: false, error };
     }
   };
@@ -76,8 +77,10 @@ export const createSafeSdk = <T1 extends z.ZodObject<{ id: z.ZodString }>>(x: {
       try {
         const docRef = doc(p.db, x.collectionName, p.data.id);
         await setDoc(docRef, p.data);
+
         return { success: true } as const;
       } catch (error) {
+        console.error(`firestoreSdkUtils.ts:${/*LL*/ 81}`, error);
         return { success: false, error } as const;
       }
     },
@@ -88,6 +91,7 @@ export const createSafeSdk = <T1 extends z.ZodObject<{ id: z.ZodString }>>(x: {
 
         return getSafeDoc({ db: p.db, id: p.data.id });
       } catch (error) {
+        console.error(`firestoreSdkUtils.ts:${/*LL*/ 81}`, error);
         return { success: false, error } as const;
       }
     },
@@ -97,6 +101,7 @@ export const createSafeSdk = <T1 extends z.ZodObject<{ id: z.ZodString }>>(x: {
         await updateDoc(docRef, p.data);
         return { success: true } as const;
       } catch (error) {
+        console.error(`firestoreSdkUtils.ts:${/*LL*/ 81}`, error);
         return { success: false, error } as const;
       }
     },
@@ -106,6 +111,7 @@ export const createSafeSdk = <T1 extends z.ZodObject<{ id: z.ZodString }>>(x: {
         await updateDoc(docRef, p.data);
         return getSafeDoc({ db: p.db, id: p.data.id });
       } catch (error) {
+        console.error(`firestoreSdkUtils.ts:${/*LL*/ 81}`, error);
         return { success: false, error };
       }
     },
@@ -115,16 +121,22 @@ export const createSafeSdk = <T1 extends z.ZodObject<{ id: z.ZodString }>>(x: {
         await deleteDoc(docRef);
         return { success: true } as const;
       } catch (error) {
+        console.error(`firestoreSdkUtils.ts:${/*LL*/ 81}`, error);
         return { success: false, error } as const;
       }
     },
 
     getDoc: getSafeDoc,
     getDocs: async (p: { db: TDb; queryConstraints: QueryConstraint[] }) => {
-      const q = query(collection(p.db, x.collectionName), ...p.queryConstraints);
-      const docs = await getDocs(q);
+      try {
+        const q = query(collection(p.db, x.collectionName), ...p.queryConstraints);
+        const docs = await getDocs(q);
 
-      return z.array(x.schema).safeParse(docs.docs);
+        return z.array(x.schema).safeParse(docs.docs);
+      } catch (error) {
+        console.error(`firestoreSdkUtils.ts:${/*LL*/ 81}`, error);
+        return { success: false, error } as const;
+      }
     },
   };
 };
