@@ -7,7 +7,7 @@ const balanceSchema = z.object({
   id: z.string(),
   uid: z.string(),
   couponStream: z.number(),
-  number_of_coupons: z.number(),
+  numberOfCoupons: z.number(),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
 });

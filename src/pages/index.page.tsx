@@ -17,27 +17,40 @@ const CreateBalance = () => {
   return (
     <div>
       <h1>Create Balance</h1>
-      <button
-        className="btn btn-primary"
-        onClick={async () => {
-          const uid = auth.currentUser?.uid;
-          if (!uid) return;
-          const response = await balancesSdk.setDoc({
-            db,
-            data: {
-              id: uid,
-              uid,
-              couponStream: 0,
-              number_of_coupons: 10,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            },
-          });
-          console.log(`index.page.tsx:${/*LL*/ 37}`, response);
-        }}
-      >
-        Create
-      </button>
+      <span className="flex gap-2">
+        <button
+          className="btn btn-primary"
+          onClick={async () => {
+            const uid = auth.currentUser?.uid;
+            if (!uid) return;
+            const response = await balancesSdk.setDoc({
+              db,
+              data: {
+                id: uid,
+                uid,
+                couponStream: 0,
+                numberOfCoupons: 10,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+              },
+            });
+            console.log(`index.page.tsx:${/*LL*/ 36}`, response);
+          }}
+        >
+          Create
+        </button>
+        <button
+          className="btn btn-primary"
+          onClick={async () => {
+            const uid = auth.currentUser?.uid;
+            if (!uid) return;
+            const response = await balancesSdk.deleteDoc({ db, id: uid });
+            console.log(`index.page.tsx:${/*LL*/ 47}`, response);
+          }}
+        >
+          Delete
+        </button>
+      </span>
     </div>
   );
 };

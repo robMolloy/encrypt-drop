@@ -20,7 +20,7 @@ service cloud.firestore {
     }
     match /balances/{id} {
       function getBalanceKeys(){
-        return ['id', 'uid', 'couponStream','number_of_coupons', 'createdAt', 'updatedAt'];
+        return ['id', 'uid', 'couponStream','numberOfCoupons', 'createdAt', 'updatedAt'];
       }
       function checkBalanceDataTypes(){
         let incoming = getIncomingData();
@@ -31,7 +31,7 @@ service cloud.firestore {
           && incoming.id == getIncomingId()
           && incoming.uid == getIncomingAuth().uid
           && incoming.couponStream is number
-          && incoming.number_of_coupons is number
+          && incoming.numberOfCoupons is number
           && incoming.createdAt is timestamp
           && incoming.updatedAt is timestamp
       }
@@ -39,6 +39,10 @@ service cloud.firestore {
         let incoming = getIncomingData();
 
         return checkBalanceDataTypes()
+          && incoming.id == getIncomingAuth().uid
+          && incoming.uid == getIncomingAuth().uid
+          && incoming.numberOfCoupons == 10
+          && incoming.couponStream == 0
           && isNow(incoming.createdAt)
           && isNow(incoming.updatedAt)
       }
