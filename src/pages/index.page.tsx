@@ -1,14 +1,46 @@
 import { Typography } from "@/components";
+import { auth, db } from "@/config/firebaseConfig";
+import { balancesSdk } from "@/db/firestoreBalancesSdk";
 import {
   Decryption,
-  Encryption,
-  PasswordInput,
   deserializeUInt8Array,
+  Encryption,
   generateEncryptionKeySalt,
   generateInitializationVector,
+  PasswordInput,
   serializeUInt8Array,
 } from "@/modules/encryption";
+import { serverTimestamp } from "firebase/firestore";
 import { useEffect, useState } from "react";
+
+const CreateBalance = () => {
+  return (
+    <div>
+      <h1>Create Balance</h1>
+      <button
+        className="btn btn-primary"
+        onClick={async () => {
+          const uid = auth.currentUser?.uid;
+          if (!uid) return;
+          const response = await balancesSdk.setDoc({
+            db,
+            data: {
+              id: uid,
+              uid,
+              couponStream: 0,
+              number_of_coupons: 10,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            },
+          });
+          console.log(`index.page.tsx:${/*LL*/ 37}`, response);
+        }}
+      >
+        Create
+      </button>
+    </div>
+  );
+};
 
 const Parent = () => {
   const [mode, setMode] = useState<"Encrypt" | "Decrypt">("Encrypt");
@@ -43,6 +75,7 @@ const Parent = () => {
   return (
     <main className={`min-h-screen`}>
       <Typography fullPage>
+        <CreateBalance />
         <PasswordInput
           value={password}
           onChange={async (x) => {

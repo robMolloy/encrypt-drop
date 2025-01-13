@@ -18,20 +18,44 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if false;
     }
-    match /balance/{id} {
-      allow create: if true;
+    match /balances/{id} {
+      function getBalanceKeys(){
+        return ['id', 'uid', 'couponStream','number_of_coupons', 'createdAt', 'updatedAt'];
+      }
+      function checkBalanceDataTypes(){
+        let incoming = getIncomingData();
+        let keys = getBalanceKeys();
+
+        return incoming.keys().hasAll(keys)
+          && incoming.keys().hasOnly(keys)
+          && incoming.id == getIncomingId()
+          && incoming.uid == getIncomingAuth().uid
+          && incoming.couponStream is number
+          && incoming.number_of_coupons is number
+          && incoming.createdAt is timestamp
+          && incoming.updatedAt is timestamp
+      }
+      function canCreateBalance(){
+        let incoming = getIncomingData();
+
+        return checkBalanceDataTypes()
+          && isNow(incoming.createdAt)
+          && isNow(incoming.updatedAt)
+      }
+      
+      allow create: if canCreateBalance();
       allow get: if false;
       allow list: if false;
       allow update: if false;
       allow delete: if false;
     }
     match /files/{id} {
-      function getFilesKeys(){
+      function getFileKeys(){
         return ['id', 'uid', 'name', 'serializedEncryptionKeySalt', 'createdAt', 'updatedAt'];
       }
       function checkFileDataTypes(){
         let incoming = getIncomingData();
-        let keys = getFilesKeys();
+        let keys = getFileKeys();
 
         return incoming.keys().hasAll(keys)
           && incoming.keys().hasOnly(keys)
