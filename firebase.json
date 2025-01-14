@@ -14,7 +14,7 @@
       "port": 8080
     },
     "storage": {
-      "port": 8082
+      "port": 9199
     },
     "ui": {
       "enabled": true
