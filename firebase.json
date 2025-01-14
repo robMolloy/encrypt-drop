@@ -1,7 +1,7 @@
 {
   "firestore": {
-    "rules": "firebase/firestore.rules",
-    "indexes": "firebase/firestore.indexes.json"
+    "rules": "firebase/firestore/firestore.rules",
+    "indexes": "firebase/firestore/firestore.indexes.json"
   },
   "emulators": {
     "auth": {
@@ -9,6 +9,9 @@
     },
     "firestore": {
       "port": 8080
+    },
+    "storage": {
+      "port": 8082
     },
     "ui": {
       "enabled": true
