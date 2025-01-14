@@ -1,9 +1,11 @@
-import { auth, db } from "@/config/firebaseConfig";
+import { auth, db, storage } from "@/config/firebaseConfig";
 import { balancesSdk } from "@/db/firestoreBalancesSdk";
 import { createFileAndUpdateBalance } from "@/db/firestoreFilesAndBalancesSdk";
+import { convertArrayBufferToBlob } from "@/utils/fileOperationsUtils";
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
 import { encryptFile, serializeUInt8Array } from "./utils";
+import { uploadFileBlob } from "@/db/firebaseStorageSdkUtils";
 
 export const Encryption = (p: {
   password: string;
@@ -108,6 +110,8 @@ export const Encryption = (p: {
           disabled={step !== "download-file"}
           className="btn btn-primary flex-1"
           onClick={async () => {
+            if (!encryptedFileBuffer) return;
+
             const uid = auth.currentUser?.uid;
             if (!uid) return;
 
@@ -115,11 +119,21 @@ export const Encryption = (p: {
             if (!balancesResponse.success) return;
             const balance = balancesResponse.data;
 
-            await createFileAndUpdateBalance({
+            const response = await createFileAndUpdateBalance({
               db,
               balance,
               file: { name: fileName, serializedEncryptionKeySalt: serializeUInt8Array(p.salt) },
             });
+            if (!response.success) return;
+            const blob = convertArrayBufferToBlob(encryptedFileBuffer);
+
+            const snapshot = await uploadFileBlob({ storage, id: response.data.file.id, blob });
+            if (snapshot.success)
+              return notifyStore.push(
+                snapshot.success
+                  ? { type: "alert-success", children: "file uploaded successfully" }
+                  : { type: "alert-warning", children: "file upload failed" },
+              );
           }}
         >
           ^ Upload Encrypted File

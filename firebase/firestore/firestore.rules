@@ -114,8 +114,15 @@ service cloud.firestore {
           && isNow(incoming.updatedAt)
           && balance.numberOfCoupons > 0
       }
+      function canGetFile(){
+        let auth = getIncomingAuth();
+        let existing = getExistingData();
+
+        return existing.uid == auth.uid
+      }
+      
       allow create: if canCreateFile();
-      allow get: if false;
+      allow get: if canGetFile();
       allow list: if false;
       allow update: if false;
       allow delete: if false;

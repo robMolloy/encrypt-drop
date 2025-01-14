@@ -1,12 +1,22 @@
 rules_version = '2';
+function getIncomingData() {
+  return request.resource;
+}
+function getFirestoreFileData(id) {
+  return firestore.get(/databases/(default)/documents/files/$(id)).data;
+}
 
 // Craft rules based on data in your Firestore database
 // allow write: if firestore.get(
 //    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if true;
+    match /files/{id} {
+      function canCreateFile(id){
+        return getFirestoreFileData(id).id != null
+          && request.resource.size < 50*1024*1024
+      }
+      allow create: if canCreateFile(id);
     }
   }
 }
