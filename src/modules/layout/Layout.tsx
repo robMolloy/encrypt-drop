@@ -1,10 +1,11 @@
-import Link from "next/link";
-import { NavBar, NavBarDropdown } from "./NavBar";
+import { auth } from "@/config/firebaseConfig";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { logoutFirebaseUser } from "@/utils/firebaseAuthUtils";
-import { auth } from "@/config/firebaseConfig";
-import { ThemeSelector } from "../themeSelector";
 import { Bars3Icon } from "@heroicons/react/24/outline";
+import Link from "next/link";
+import { ThemeSelector } from "../themeSelector";
+import { NavBar, NavBarDropdown } from "./NavBar";
+import { useBalanceStore } from "@/pages/_app.page";
 
 export type TPageLink = {
   label: string;
@@ -48,6 +49,9 @@ const ContainerWithSpotlightBackgroundTop = () => {
 export const Layout = (p: { children: React.ReactNode }) => {
   const authStore = useAuthStore();
   const safeAuthStore = authStore.getSafeStore();
+  const balanceStore = useBalanceStore();
+  const safeBalanceStore = balanceStore.getSafeStore();
+
   return (
     <>
       <div className="drawer">
@@ -70,6 +74,11 @@ export const Layout = (p: { children: React.ReactNode }) => {
               rightChildren={
                 <>
                   <div className="flex w-full items-center justify-end gap-6">
+                    <div className="link no-underline hover:underline">
+                      {safeAuthStore.status === "logged_in" && (
+                        <div>Coupons: {safeBalanceStore.balance?.numberOfCoupons ?? "0"}</div>
+                      )}
+                    </div>
                     <NavBarDropdown
                       labelChildren={(p: { tabIndex: 0 }) => (
                         <div className="link no-underline hover:underline" tabIndex={p.tabIndex}>
@@ -92,21 +101,6 @@ export const Layout = (p: { children: React.ReactNode }) => {
                     )}
                   </div>
                 </>
-              }
-              bottomChildren={
-                safeAuthStore.status === "logged_in" && (
-                  <div className="breadcrumbs pl-4 text-sm">
-                    <ul>
-                      <li>
-                        <a>Home</a>
-                      </li>
-                      <li>
-                        <a>Documents</a>
-                      </li>
-                      <li>Add Document</li>
-                    </ul>
-                  </div>
-                )
               }
             />
           </NavBarContainer>

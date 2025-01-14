@@ -4,7 +4,7 @@ import { balanceSchema } from "./firestoreBalancesSdk";
 
 const filesCollectionName = "files";
 
-const filesSchema = z.object({
+export const filesSchema = z.object({
   id: z.string(),
   uid: z.string(),
   name: z.string(),

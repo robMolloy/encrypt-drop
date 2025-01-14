@@ -73,18 +73,17 @@ service cloud.firestore {
           && file.id == fileId
       }
 
-      function canGetBalance(){
+      function canGetBalance(id){
         let auth = getIncomingAuth();
-        let existing = getExistingData(); 
 
-        return existing.id == auth.uid
+        return id == auth.uid
       }
       
       allow create: if canCreateBalance();
       allow update: if canUpdateBalance();
-      allow get: if canGetBalance();
+      allow get: if canGetBalance(id);
       allow list: if false;
-      allow delete: if true;
+      allow delete: if false;
     }
     match /files/{id} {
       function getFileKeys(){

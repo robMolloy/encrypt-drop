@@ -1,6 +1,4 @@
 import { Typography } from "@/components";
-import { auth, db } from "@/config/firebaseConfig";
-import { balancesSdk } from "@/db/firestoreBalancesSdk";
 import {
   Decryption,
   deserializeUInt8Array,
@@ -10,50 +8,7 @@ import {
   PasswordInput,
   serializeUInt8Array,
 } from "@/modules/encryption";
-import { serverTimestamp } from "firebase/firestore";
 import { useEffect, useState } from "react";
-
-const CreateBalance = () => {
-  return (
-    <div>
-      <h1>Create Balance</h1>
-      <span className="flex gap-2">
-        <button
-          className="btn btn-primary"
-          onClick={async () => {
-            const uid = auth.currentUser?.uid;
-            if (!uid) return;
-            const response = await balancesSdk.setDoc({
-              db,
-              data: {
-                id: uid,
-                uid,
-                couponStream: 0,
-                numberOfCoupons: 10,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-              },
-            });
-            console.log(`index.page.tsx:${/*LL*/ 36}`, response);
-          }}
-        >
-          Create
-        </button>
-        <button
-          className="btn btn-primary"
-          onClick={async () => {
-            const uid = auth.currentUser?.uid;
-            if (!uid) return;
-            const response = await balancesSdk.deleteDoc({ db, id: uid });
-            console.log(`index.page.tsx:${/*LL*/ 47}`, response);
-          }}
-        >
-          Delete
-        </button>
-      </span>
-    </div>
-  );
-};
 
 const Parent = () => {
   const [mode, setMode] = useState<"Encrypt" | "Decrypt">("Encrypt");
@@ -88,7 +43,6 @@ const Parent = () => {
   return (
     <main className={`min-h-screen`}>
       <Typography fullPage>
-        <CreateBalance />
         <PasswordInput
           value={password}
           onChange={async (x) => {

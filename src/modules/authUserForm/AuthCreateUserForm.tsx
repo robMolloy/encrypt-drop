@@ -1,9 +1,10 @@
-import { auth } from "@/config/firebaseConfig";
+import { auth, db } from "@/config/firebaseConfig";
 import { TCreateUserFormData, createFirebaseUser } from "@/utils/firebaseAuthUtils";
 import { useState } from "react";
 import { z } from "zod";
 import { checkFormDataAgainstRuleMap, checkFormDataValue, createRuleMap } from "../checkFormData";
 import { TextInput } from "@/components";
+import { balancesSdk } from "@/db/firestoreBalancesSdk";
 
 export type TAuthCreateUserFormProps = {
   formData: TCreateUserFormData;
@@ -68,15 +69,17 @@ export const AuthCreateUserForm = (p: TAuthCreateUserFormProps) => {
 
       return overwriteFormDataErrorMessages(checkFormDataResponse.errors);
     }
+
     setIsLoading(true);
-
-    const createResponse = await createFirebaseUser({ auth, formData: p.formData });
-    if (createResponse.success) p.onCreateUserSuccess(p.formData);
-    else {
-      const errorMessage = createResponse?.error?.message;
-      p.onCreateUserFail({ actionError: errorMessage });
-    }
-
+    await (async () => {
+      const createResponse = await createFirebaseUser({ auth, formData: p.formData });
+      if (!createResponse.success) {
+        const errorMessage = createResponse?.error?.message;
+        return p.onCreateUserFail({ actionError: errorMessage });
+      }
+      await balancesSdk.createInitialBalance({ db, uid: createResponse.data.uid });
+      p.onCreateUserSuccess(p.formData);
+    })();
     setIsLoading(false);
   };
 

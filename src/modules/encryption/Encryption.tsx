@@ -1,7 +1,6 @@
 import { auth, db } from "@/config/firebaseConfig";
 import { balancesSdk } from "@/db/firestoreBalancesSdk";
-import { filesSdk, getNextFileId } from "@/db/firestoreFilesSdk";
-import { creatifyDoc, updatifyDoc } from "@/utils/firestoreSdkUtils/firestoreUtils";
+import { createFileAndUpdateBalance } from "@/db/firestoreFilesAndBalancesSdk";
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
 import { encryptFile, serializeUInt8Array } from "./utils";
@@ -114,21 +113,12 @@ export const Encryption = (p: {
 
             const balancesResponse = await balancesSdk.getDoc({ db, id: uid });
             if (!balancesResponse.success) return;
-
             const balance = balancesResponse.data;
-            await filesSdk.setDoc({
-              db,
-              data: creatifyDoc({
-                id: getNextFileId({ balance }),
-                name: fileName,
-                uid: uid,
-                serializedEncryptionKeySalt: serializeUInt8Array(p.salt),
-              }),
-            });
 
-            await balancesSdk.updateDoc({
+            await createFileAndUpdateBalance({
               db,
-              data: updatifyDoc({ ...balance, numberOfCoupons: balance.numberOfCoupons - 1 }),
+              balance,
+              file: { name: fileName, serializedEncryptionKeySalt: serializeUInt8Array(p.salt) },
             });
           }}
         >
