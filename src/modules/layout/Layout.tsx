@@ -5,7 +5,7 @@ import { Bars3Icon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { ThemeSelector } from "../themeSelector";
 import { NavBar, NavBarDropdown } from "./NavBar";
-import { useBalanceStore } from "@/pages/_app.page";
+import { useBalanceStore } from "@/stores/useBalanceStore";
 
 export type TPageLink = {
   label: string;
@@ -74,7 +74,7 @@ export const Layout = (p: { children: React.ReactNode }) => {
               rightChildren={
                 <>
                   <div className="flex w-full items-center justify-end gap-6">
-                    <div className="link no-underline hover:underline">
+                    <div className="link no-underline">
                       {safeAuthStore.status === "logged_in" && (
                         <div>Coupons: {safeBalanceStore.balance?.numberOfCoupons ?? "0"}</div>
                       )}
@@ -94,7 +94,10 @@ export const Layout = (p: { children: React.ReactNode }) => {
                       <Link
                         className="link no-underline hover:underline"
                         href="/"
-                        onClick={() => logoutFirebaseUser({ auth: auth })}
+                        onClick={() => {
+                          balanceStore.clear();
+                          logoutFirebaseUser({ auth });
+                        }}
                       >
                         Log Out
                       </Link>
