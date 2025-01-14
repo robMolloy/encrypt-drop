@@ -1,5 +1,5 @@
 {
-  "name": "next-daisyui-fire-starter",
+  "name": "encryptdrop",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -18,8 +18,7 @@
     "dev1": "npm run dev:offline",
     "dev2": "npm run tsc",
     "dev3": "npm run firebase:emulators-start:offline",
-    "dev4": "npm run functions:build:watch",
-    "dev5": "npm run test:watch"
+    "dev4": "npm run test:watch"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",

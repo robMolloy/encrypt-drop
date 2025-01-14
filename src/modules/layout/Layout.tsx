@@ -67,7 +67,7 @@ export const Layout = (p: { children: React.ReactNode }) => {
                     </OpenDrawerWrapper>
                   </div>
                   <Link href="/" className="p-0 text-3xl hover:underline">
-                    next-daisyui-fire-starter
+                    EncryptDrop
                   </Link>
                 </div>
               }

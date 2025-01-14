@@ -36,7 +36,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>next-daisyui-fire-starter</title>
+        <title>EncryptDrop</title>
       </Head>
 
       <Notify />
