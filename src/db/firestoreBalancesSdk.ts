@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { createSafeSdk, TDb, timestampSchema } from "@/utils/firestoreSdkUtils/firestoreSdkUtils";
+import { createSafeSdk, TDb } from "@/utils/firestoreSdkUtils/firestoreSdkUtils";
 import { doc, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { timestampSchema } from "@/utils/firestoreSdkUtils/firestoreUtils";
 
 export const balancesCollectionName = "balances";
 

@@ -1,22 +1,21 @@
 import {
-  deleteDoc,
   addDoc,
   collection,
+  deleteDoc,
   doc,
+  Firestore,
   getDoc,
   getDocs,
   query,
   QueryConstraint,
   setDoc,
   updateDoc,
-  Firestore,
 } from "firebase/firestore";
 import { z } from "zod";
-import { timestampSchema as initTimestampSchema, TServerTimestamp } from "./firestoreUtils";
+import { TServerTimestamp } from "./firestoreUtils";
 
 // export type TDb = ReturnType<ReturnType<RulesTestEnvironment["authenticatedContext"]>["firestore"]>;
 export type TDb = Firestore;
-export const timestampSchema = initTimestampSchema;
 
 type CreatifyDoc<T1 extends object> = Omit<T1, "createdAt" | "updatedAt"> & {
   createdAt: TServerTimestamp;

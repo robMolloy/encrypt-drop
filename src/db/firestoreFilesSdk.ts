@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { createSafeSdk, timestampSchema } from "@/utils/firestoreSdkUtils/firestoreSdkUtils";
+import { createSafeSdk } from "@/utils/firestoreSdkUtils/firestoreSdkUtils";
 import { balanceSchema } from "./firestoreBalancesSdk";
+import { timestampSchema } from "@/utils/firestoreSdkUtils/firestoreUtils";
 
 const filesCollectionName = "files";
 
