@@ -1,4 +1,5 @@
 import { serverTimestamp, Timestamp } from "firebase/firestore";
+import { z } from "zod";
 
 //
 export const removeKey = <T extends object, K extends keyof T>(key: K, object: T): Omit<T, K> => {
@@ -7,8 +8,8 @@ export const removeKey = <T extends object, K extends keyof T>(key: K, object: T
 };
 
 export type TServerTimestamp = ReturnType<typeof serverTimestamp>;
-export type TTimestampValue = { seconds: number; nanoseconds: number };
 export type TTimestamp = ReturnType<typeof Timestamp.now>;
+export type TTimestampValue = Pick<TTimestamp, "seconds" | "nanoseconds">;
 
 export const getNotNowTimestamp = () => {
   const now = Timestamp.now();
@@ -18,6 +19,10 @@ export const getNotNowTimestamp = () => {
 export const getTimestampFromTimestampValue = (x: TTimestampValue) => {
   return new Timestamp(x.seconds, x.nanoseconds);
 };
+
+export const timestampSchema = z
+  .object({ seconds: z.number(), nanoseconds: z.number() })
+  .transform((x) => getTimestampFromTimestampValue(x));
 
 export const creatifyDoc = <T extends object>(obj: T) => {
   return { ...obj, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };

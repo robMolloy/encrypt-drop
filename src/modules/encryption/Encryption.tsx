@@ -1,7 +1,7 @@
 import { auth, db, storage } from "@/config/firebaseConfig";
 import { balancesSdk } from "@/db/firestoreBalancesSdk";
 import { createFileAndUpdateBalance } from "@/db/firestoreFilesAndBalancesSdk";
-import { convertArrayBufferToBlob } from "@/utils/fileOperationsUtils";
+import { convertArrayBufferToBlob } from "@/utils/dataTypeUtils";
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
 import { encryptFile, serializeUInt8Array } from "./utils";
