@@ -16,9 +16,7 @@
     "test": "jest --detectOpenHandles",
     "test:watch": "jest --watchAll --detectOpenHandles",
     "dev1": "npm run dev:offline",
-    "dev2": "npm run tsc",
-    "dev3": "npm run firebase:emulators-start:offline",
-    "dev4": "npm run test:watch"
+    "dev2": "npm run tsc"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",
