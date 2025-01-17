@@ -19,6 +19,7 @@ const MyPaymentElement = (p: {
   onError: (x: string | undefined) => void;
 }) => {
   const $isLoading = $(false);
+  const $showCustomPaymentFormComponents = $(false);
   const stripe = useStripe();
   const elements = useElements();
 
@@ -41,11 +42,15 @@ const MyPaymentElement = (p: {
 
   return (
     <form onSubmit={handleSubmit}>
-      <PaymentElement />
-      <br />
-      <button className="btn btn-primary w-full">
-        {$isLoading.value ? <span className="loading loading-spinner" /> : "Submit"}
-      </button>
+      <PaymentElement onLoaderStart={() => $showCustomPaymentFormComponents.set(true)} />
+      {$showCustomPaymentFormComponents.value && (
+        <>
+          <br />
+          <button className="btn btn-primary w-full">
+            {$isLoading.value ? <span className="loading loading-spinner" /> : "Submit"}
+          </button>
+        </>
+      )}
     </form>
   );
 };
@@ -114,7 +119,9 @@ export default function PaymentCompletionPage() {
         onClick={() =>
           paymentIntentsSdk.setDoc({
             db: db,
-            data: creatifyDoc({ id: uuid() }),
+            data: creatifyDoc({
+              id: uuid(),
+            }),
           })
         }
       >
