@@ -1,20 +1,15 @@
 import { Typography } from "@/components";
-import { functions } from "@/config/firebaseConfig";
+import { db } from "@/config/firebaseConfig";
+import { paymentIntentsSdk } from "@/db/firestorePaymentIntentsSdk";
 import { useNotifyStore } from "@/modules/notify";
+import { functionsdk } from "@/utils/firebaseFunctionsSdk";
+import { creatifyDoc } from "@/utils/firestoreSdkUtils/firestoreUtils";
 import { $ } from "@/utils/useReactive";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe, PaymentIntentResult } from "@stripe/stripe-js";
-import { httpsCallable } from "firebase/functions";
 import { FormEvent, useEffect, useRef } from "react";
-import { z } from "zod";
+import { v4 as uuid } from "uuid";
 
-const createStripePaymentIntentFunction = httpsCallable(functions, "createStripePaymentIntent");
-const createStripePaymentIntentSchema = z.object({ clientSecret: z.string() });
-const createStripePaymentIntent = async (p: { amount: number; currency: string }) => {
-  const response = await createStripePaymentIntentFunction(p);
-  const parsedResponse = createStripePaymentIntentSchema.safeParse(response.data);
-  return parsedResponse;
-};
 const stripePromise = loadStripe(
   "pk_test_51QhH4nIGFJRyk0RhXvRc2rpNtuV0iHmS5T6sIUxxUWO8nj9wvJa7vEgVPZ0RhuQSP7NIagxu1dFdn6xfowpnzWnz00R1ukCj7h",
 );
@@ -72,12 +67,12 @@ const CheckoutForm = (
     if (!isFirstRender.current) return;
 
     (async () => {
-      const paymentIntentResponse = await createStripePaymentIntent({
+      const paymentIntentResponse = await functionsdk.createStripePaymentIntent({
         amount: p.amount,
         currency: p.currency,
       });
       if (!paymentIntentResponse.success) return $error.set("failed to create a paymentIntent");
-      $paymentIntentClientSecret.set(paymentIntentResponse.data.clientSecret);
+      $paymentIntentClientSecret.set(paymentIntentResponse.data.client_secret);
     })();
     isFirstRender.current = false;
   }, []);
@@ -114,6 +109,17 @@ export default function PaymentCompletionPage() {
 
   return (
     <main className={`min-h-screen`}>
+      <button
+        className="btn btn-primary"
+        onClick={() =>
+          paymentIntentsSdk.setDoc({
+            db: db,
+            data: creatifyDoc({ id: uuid() }),
+          })
+        }
+      >
+        send PI
+      </button>
       <Typography fullPage>
         <div>
           {$step.value === "initial" && (
@@ -130,10 +136,7 @@ export default function PaymentCompletionPage() {
               onSuccess={(x) => {
                 console.log(`payment-completion.page.tsx:${/*LL*/ 131}`, { x });
 
-                notify.push({
-                  type: "alert-success",
-                  heading: "Payment complete",
-                });
+                notify.push({ type: "alert-success", heading: "Payment complete" });
                 $step.set("success");
               }}
             />
