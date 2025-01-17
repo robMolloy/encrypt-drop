@@ -142,6 +142,12 @@ export default function PaymentCompletionPage() {
 
                 notify.push({ type: "alert-success", heading: "Payment complete" });
                 $step.set("success");
+
+                const uid = auth.currentUser?.uid;
+                const paymentIntentId = x.paymentIntent?.id;
+                if (!uid || !paymentIntentId) return;
+
+                paymentIntentsSdk.setDoc({ db, data: creatifyDoc({ id: paymentIntentId, uid }) });
               }}
             />
           )}
