@@ -1,5 +1,5 @@
 import { Typography } from "@/components";
-import { db } from "@/config/firebaseConfig";
+import { auth, db } from "@/config/firebaseConfig";
 import { paymentIntentsSdk } from "@/db/firestorePaymentIntentsSdk";
 import { useNotifyStore } from "@/modules/notify";
 import { functionsdk } from "@/utils/firebaseFunctionsSdk";
@@ -116,14 +116,11 @@ export default function PaymentCompletionPage() {
     <main className={`min-h-screen`}>
       <button
         className="btn btn-primary"
-        onClick={() =>
-          paymentIntentsSdk.setDoc({
-            db: db,
-            data: creatifyDoc({
-              id: uuid(),
-            }),
-          })
-        }
+        onClick={() => {
+          const uid = auth.currentUser?.uid;
+          if (!uid) return;
+          paymentIntentsSdk.setDoc({ db: db, data: creatifyDoc({ id: uuid(), uid }) });
+        }}
       >
         send PI
       </button>

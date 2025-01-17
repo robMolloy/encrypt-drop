@@ -6,6 +6,7 @@ const paymentIntentsCollectionName = "paymentIntents";
 
 export const paymentIntentsSchema = z.object({
   id: z.string(),
+  uid: z.string(),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
 });
