@@ -8,10 +8,11 @@ import {
   PasswordInput,
   serializeUInt8Array,
 } from "@/modules/encryption";
+import { GetFiles } from "@/modules/getFiles/GetFiles";
 import { useEffect, useState } from "react";
 
 const Parent = () => {
-  const [mode, setMode] = useState<"Encrypt" | "Decrypt">("Encrypt");
+  const [mode, setMode] = useState<"Encrypt" | "Decrypt" | "Get">("Encrypt");
 
   const [password, setPassword] = useState("");
 
@@ -130,6 +131,13 @@ const Parent = () => {
               >
                 <span>Decrypt</span>
               </div>
+              <div
+                onClick={() => setMode("Get")}
+                role="tab"
+                className={`tab h-10 text-lg ${mode === "Decrypt" ? "tab-active" : "font-light opacity-80"}`}
+              >
+                <span>Get</span>
+              </div>
             </div>
             <div className="card-body">
               <span className={mode === "Encrypt" ? "" : "hidden"}>
@@ -145,6 +153,9 @@ const Parent = () => {
                   salt={encryptionKeySalt}
                   initializationVector={initializationVector}
                 />
+              </span>
+              <span className={mode === "Get" ? "" : "hidden"}>
+                <GetFiles />
               </span>
             </div>
           </div>

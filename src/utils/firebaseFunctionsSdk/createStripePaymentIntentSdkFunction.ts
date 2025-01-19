@@ -2,10 +2,7 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "../../config/firebaseConfig";
 import { z } from "zod";
 
-const createStripePaymentIntentFn = httpsCallable(
-  functions,
-  "createStripePaymentIntent"
-);
+const createStripePaymentIntentFn = httpsCallable(functions, "createStripePaymentIntent");
 
 const successResponseSchema = z.object({
   data: z.object({
@@ -14,10 +11,7 @@ const successResponseSchema = z.object({
   }),
 });
 
-export const createStripePaymentIntent = async (p: {
-  amount: number;
-  currency: string;
-}) => {
+export const createStripePaymentIntent = async (p: { amount: number; currency: string }) => {
   const response = await createStripePaymentIntentFn(p);
   const parsedResponse = successResponseSchema.safeParse(response);
 

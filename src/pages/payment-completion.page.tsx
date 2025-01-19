@@ -2,7 +2,7 @@ import { Typography } from "@/components";
 import { auth, db } from "@/config/firebaseConfig";
 import { paymentIntentsSdk } from "@/db/firestorePaymentIntentsSdk";
 import { useNotifyStore } from "@/modules/notify";
-import { functionsdk } from "@/utils/firebaseFunctionsSdk";
+import { firebaseFunctionsSdk } from "@/utils/firebaseFunctionsSdk";
 import { creatifyDoc } from "@/utils/firestoreSdkUtils/firestoreUtils";
 import { $ } from "@/utils/useReactive";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
@@ -72,7 +72,7 @@ const CheckoutForm = (
     if (!isFirstRender.current) return;
 
     (async () => {
-      const paymentIntentResponse = await functionsdk.createStripePaymentIntent({
+      const paymentIntentResponse = await firebaseFunctionsSdk.createStripePaymentIntent({
         amount: p.amount,
         currency: p.currency,
       });
@@ -137,17 +137,44 @@ export default function PaymentCompletionPage() {
                   children: <div>{x}</div>,
                 });
               }}
-              onSuccess={(x) => {
+              onSuccess={async (x) => {
                 console.log(`payment-completion.page.tsx:${/*LL*/ 131}`, { x });
 
-                notify.push({ type: "alert-success", heading: "Payment complete" });
-                $step.set("success");
+                const rtn = await (() => {
+                  $step.set("success");
 
-                const uid = auth.currentUser?.uid;
-                const paymentIntentId = x.paymentIntent?.id;
-                if (!uid || !paymentIntentId) return;
+                  const uid = auth.currentUser?.uid;
+                  const paymentIntentId = x.paymentIntent?.id;
+                  if (!uid || !paymentIntentId) return { success: false };
 
-                paymentIntentsSdk.setDoc({ db, data: creatifyDoc({ id: paymentIntentId, uid }) });
+                  return paymentIntentsSdk.setDoc({
+                    db,
+                    data: creatifyDoc({ id: paymentIntentId, uid }),
+                  });
+                })();
+
+                if (rtn.success)
+                  return notify.push({
+                    type: "alert-success",
+                    heading: "Payment complete",
+                    children: <div>Your balance will be updated shortly</div>,
+                  });
+
+                notify.push({
+                  type: "alert-error",
+                  heading: "Something went wrong",
+                  duration: 3000000,
+                  children: (
+                    <div>
+                      <div>
+                        It looks like you paid successfully but we couldn't update your balance
+                      </div>
+                      <div>
+                        Please contact me on whatsapp to notify me of this issue: 07934647667
+                      </div>
+                    </div>
+                  ),
+                });
               }}
             />
           )}
