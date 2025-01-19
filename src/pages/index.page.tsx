@@ -134,7 +134,7 @@ const Parent = () => {
               <div
                 onClick={() => setMode("Get")}
                 role="tab"
-                className={`tab h-10 text-lg ${mode === "Decrypt" ? "tab-active" : "font-light opacity-80"}`}
+                className={`tab h-10 text-lg ${mode === "Get" ? "tab-active" : "font-light opacity-80"}`}
               >
                 <span>Get</span>
               </div>
