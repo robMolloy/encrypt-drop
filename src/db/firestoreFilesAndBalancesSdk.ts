@@ -1,12 +1,12 @@
 import { TDb } from "@/utils/firestoreSdkUtils/firestoreSdkUtils";
 import { z } from "zod";
-import { filesSchema, filesSdk, getNextFileId } from "./firestoreFilesSdk";
+import { fileSchema, filesSdk, getNextFileId } from "./firestoreFilesSdk";
 import { balanceSchema, balancesSdk } from "./firestoreBalancesSdk";
 import { creatifyDoc, updatifyDoc } from "@/utils/firestoreSdkUtils/firestoreUtils";
 
 export const createFileAndUpdateBalance = async (p: {
   db: TDb;
-  file: Pick<z.infer<typeof filesSchema>, "name" | "serializedEncryptionKeySalt">;
+  file: Pick<z.infer<typeof fileSchema>, "name" | "serializedEncryptionKeySalt">;
   balance: z.infer<typeof balanceSchema>;
 }) => {
   const fileId = getNextFileId({ balance: p.balance });

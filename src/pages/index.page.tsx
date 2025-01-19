@@ -8,7 +8,7 @@ import {
   PasswordInput,
   serializeUInt8Array,
 } from "@/modules/encryption";
-import { GetFiles } from "@/modules/getFiles/GetFiles";
+import { DisplayFilesTable } from "@/modules/getFiles/GetFiles";
 import { useEffect, useState } from "react";
 
 const Parent = () => {
@@ -155,7 +155,7 @@ const Parent = () => {
                 />
               </span>
               <span className={mode === "Get" ? "" : "hidden"}>
-                <GetFiles />
+                <DisplayFilesTable />
               </span>
             </div>
           </div>

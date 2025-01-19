@@ -129,9 +129,10 @@ export const createSafeSdk = <T1 extends z.ZodObject<{ id: z.ZodString }>>(x: {
     getDocs: async (p: { db: TDb; queryConstraints: QueryConstraint[] }) => {
       try {
         const q = query(collection(p.db, x.collectionName), ...p.queryConstraints);
-        const docs = await getDocs(q);
+        const response = await getDocs(q);
+        const docs = response.docs.map((x) => x.data());
 
-        return z.array(x.schema).safeParse(docs.docs);
+        return z.array(x.schema).safeParse(docs);
       } catch (error) {
         console.error(`firestoreSdkUtils.ts:${/*LL*/ 81}`, error);
         return { success: false, error } as const;
