@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ThemeSelector } from "../themeSelector";
 import { NavBar, NavBarDropdown } from "./NavBar";
 import { useBalanceStore } from "@/stores/useBalanceStore";
+import { useFilesStore } from "@/stores/useFilesStore";
 
 export type TPageLink = {
   label: string;
@@ -51,6 +52,7 @@ export const Layout = (p: { children: React.ReactNode }) => {
   const safeAuthStore = authStore.getSafeStore();
   const balanceStore = useBalanceStore();
   const safeBalanceStore = balanceStore.getSafeStore();
+  const filesStore = useFilesStore();
 
   return (
     <>
@@ -95,6 +97,7 @@ export const Layout = (p: { children: React.ReactNode }) => {
                         className="link no-underline hover:underline"
                         href="/"
                         onClick={() => {
+                          filesStore.clear();
                           balanceStore.clear();
                           logoutFirebaseUser({ auth });
                         }}
