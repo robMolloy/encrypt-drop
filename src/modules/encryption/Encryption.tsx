@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
 import { encryptFile, serializeUInt8Array } from "./utils";
 import { uploadFileBlob } from "@/db/firebaseStorageSdkUtils";
+import { $ } from "@/utils/useReactive";
 
 export const Encryption = (p: {
   password: string;
@@ -17,6 +18,7 @@ export const Encryption = (p: {
   const fileUploadElementRef = useRef<HTMLInputElement>(null);
   const [unencryptedFileBuffer, setUnencryptedFileBuffer] = useState<ArrayBuffer>();
   const [encryptedFileBuffer, setEncryptedFileBuffer] = useState<ArrayBuffer>();
+  const $isUploadEncrytedFileLoading = $(false);
 
   const step = (() => {
     if (!unencryptedFileBuffer) return "add-file";
@@ -110,33 +112,64 @@ export const Encryption = (p: {
           disabled={step !== "download-file"}
           className="btn btn-primary flex-1"
           onClick={async () => {
-            if (!encryptedFileBuffer) return;
+            if ($isUploadEncrytedFileLoading.value) return;
 
-            const uid = auth.currentUser?.uid;
-            if (!uid) return;
+            $isUploadEncrytedFileLoading.set(true);
+            const response = await (async () => {
+              if (!encryptedFileBuffer)
+                return { success: false, error: { message: "encrypted file not found" } } as const;
 
-            const balancesResponse = await balancesSdk.getDoc({ db, id: uid });
-            if (!balancesResponse.success) return;
-            const balance = balancesResponse.data;
+              const uid = auth.currentUser?.uid;
+              if (!uid)
+                return { success: false, error: { message: "user not logged in" } } as const;
 
-            const response = await createFileAndUpdateBalance({
-              db,
-              balance,
-              file: { name: fileName, serializedEncryptionKeySalt: serializeUInt8Array(p.salt) },
-            });
-            if (!response.success) return;
-            const blob = convertArrayBufferToBlob(encryptedFileBuffer);
+              const balancesResponse = await balancesSdk.getDoc({ db, id: uid });
+              if (!balancesResponse.success)
+                return {
+                  success: false,
+                  error: { message: "could not retrieve balance" },
+                } as const;
+              const balance = balancesResponse.data;
+              if (balance.numberOfCoupons <= 0)
+                return { success: false, error: { message: "insufficient balance" } } as const;
 
-            const snapshot = await uploadFileBlob({ storage, id: response.data.file.id, blob });
-            if (snapshot.success)
-              return notifyStore.push(
-                snapshot.success
-                  ? { type: "alert-success", children: "file uploaded successfully" }
-                  : { type: "alert-warning", children: "file upload failed" },
-              );
+              const response = await createFileAndUpdateBalance({
+                db,
+                balance,
+                file: { name: fileName, serializedEncryptionKeySalt: serializeUInt8Array(p.salt) },
+              });
+              if (!response.success)
+                return {
+                  success: false,
+                  error: { message: "unable to create file and update balance" } as const,
+                };
+              const blob = convertArrayBufferToBlob(encryptedFileBuffer);
+
+              const snapshot = await uploadFileBlob({ storage, id: response.data.file.id, blob });
+              if (snapshot.success) return { success: true } as const;
+              return { success: false, error: { message: "file upload failed" } } as const;
+            })();
+            $isUploadEncrytedFileLoading.set(false);
+
+            notifyStore.push(
+              response.success
+                ? { type: "alert-success", children: "file uploaded successfully" }
+                : {
+                    type: "alert-warning",
+                    children: (
+                      <>
+                        <div>Could not upload file</div>
+                        <div>{response.error.message}</div>
+                      </>
+                    ),
+                  },
+            );
           }}
         >
-          ^ Upload Encrypted File
+          {!$isUploadEncrytedFileLoading.value && <div>^ Upload Encrypted File</div>}
+          {$isUploadEncrytedFileLoading.value && (
+            <span className="loading loading-spinner loading-sm" />
+          )}
         </button>
       </span>
     </span>
