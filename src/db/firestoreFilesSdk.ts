@@ -9,7 +9,7 @@ const filesCollectionName = "files";
 export const fileSchema = z.object({
   id: z.string(),
   uid: z.string(),
-  name: z.string(),
+  fileName: z.string(),
   serializedEncryptionKeySalt: z.string(),
   serializedInitializationVector: z.string(),
   createdAt: timestampSchema,
@@ -33,9 +33,18 @@ const subscribeToMyFiles = (p: {
 
   const unsub = onSnapshot(q, (querySnapshot) => {
     const docs = querySnapshot.docs.map((x) => x.data());
-    const response = z.array(fileSchema).safeParse(docs);
+    const parsedDocs = docs.map((x) => fileSchema.safeParse(x));
 
-    if (response.success) p.onValidData(response.data);
+    const successDocs = [...parsedDocs]
+      .filter((x) => x.success)
+      .map((x) => x.data)
+      .filter((x) => x !== undefined);
+    const failedDocs = [...parsedDocs].filter((x) => !x.success).map((x) => x.error);
+
+    const success = successDocs.length > 0 || (successDocs.length === 0 && failedDocs.length === 0);
+
+    if (success) return p.onValidData(successDocs);
+    console.error(`firestoreFilesSdk.ts:${/*LL*/ 37}`, { failedDocs });
   });
 
   return unsub;

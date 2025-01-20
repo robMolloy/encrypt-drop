@@ -8,7 +8,7 @@
     "start": "next start",
     "dev": "next dev",
     "dev:offline": "NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true next dev -p 3006",
-    "tsc": "tsc --noemit --watch",
+    "tsc": "node_modules/.bin/tsc --noemit --watch",
     "firebase:emulators-start": "node_modules/.bin/firebase --export-on-exit=\"./firebase/caches/history/$(date +%Y-%m-%d+%H:%M:%S)\" --import=\"./firebase/caches/seeds/seed1\" emulators:start",
     "firebase:emulators-start:offline": "node_modules/.bin/firebase --export-on-exit=\"./firebase/caches/history/$(date +%Y-%m-%d+%H:%M:%S)\" --import=\"./firebase/caches/seeds/seed1\" --project demo-project emulators:start --only auth,firestore,storage",
     "firebase:emulators-start:offline-without-import-export": "firebase --project demo-project emulators:start --only auth,firestore",
@@ -51,6 +51,6 @@
     "prettier-plugin-tailwindcss": "^0.6.5",
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.2.3",
-    "typescript": "^5"
+    "typescript": "5.5.4"
   }
 }

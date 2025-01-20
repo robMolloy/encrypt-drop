@@ -32,7 +32,7 @@ const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number })
         <th className="row-span-2" rowSpan={2}>
           {p.i + 1}
         </th>
-        <td>{p.file.name}</td>
+        <td>{p.file.fileName}</td>
         <td className="max-w-12 overflow-hidden text-ellipsis whitespace-nowrap">
           {p.file.serializedEncryptionKeySalt}
         </td>
@@ -112,7 +112,7 @@ const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number })
               <a
                 className={`btn btn-primary btn-xs`}
                 href={URL.createObjectURL($decryptedBlob.value)}
-                download={p.file.name}
+                download={p.file.fileName}
               >
                 Save Decrypted File
               </a>

@@ -26,9 +26,8 @@ export const Encryption = (p: {
     return "download-file";
   })();
 
-  const fileName = fileUploadElementRef.current?.files?.[0]?.name
-    ? `${fileUploadElementRef.current?.files?.[0].name}.bin`
-    : "encryptedFile.bin";
+  const $fileName = $("");
+  const $encryptedFileName = $("");
 
   return (
     <span className="flex flex-col gap-4">
@@ -47,6 +46,8 @@ export const Encryption = (p: {
 
             const fileBuffer = await file.arrayBuffer();
             setUnencryptedFileBuffer(fileBuffer);
+            $fileName.set(file.name);
+            $encryptedFileName.set(`${file.name}.bin`);
           }}
         />
         <button
@@ -58,6 +59,8 @@ export const Encryption = (p: {
             fileInput.value = "";
             setUnencryptedFileBuffer(undefined);
             setEncryptedFileBuffer(undefined);
+            $fileName.set("");
+            $encryptedFileName.set("");
           }}
           className="btn btn-outline"
         >
@@ -89,6 +92,35 @@ export const Encryption = (p: {
         Encrypt File
       </button>
 
+      <label className="form-control w-full">
+        <div className={`label ${step !== "download-file" ? "opacity-10" : ""}`}>
+          <span className="label-text">
+            File name (include extension - .pdf, .doc, etc.). Only required if uploading
+          </span>
+        </div>
+        <input
+          type="text"
+          disabled={step !== "download-file"}
+          value={step !== "download-file" ? "" : $fileName.value}
+          onChange={(e) => $fileName.set(e.target.value)}
+          className="input input-bordered w-full"
+        />
+      </label>
+      <label className="form-control w-full">
+        <div className={`label ${step !== "download-file" ? "opacity-10" : ""}`}>
+          <span className="label-text">
+            Encrypted file name (include extension - .pdf, .doc, etc.)
+          </span>
+        </div>
+        <input
+          type="text"
+          disabled={step !== "download-file"}
+          value={step !== "download-file" ? "" : $encryptedFileName.value}
+          onChange={(e) => $encryptedFileName.set(e.target.value)}
+          className="input input-bordered w-full"
+        />
+      </label>
+
       <span className="flex gap-2">
         <a
           type="button"
@@ -100,11 +132,7 @@ export const Encryption = (p: {
                 )
               : "#"
           }
-          download={
-            fileUploadElementRef.current?.files?.[0]?.name
-              ? `${fileUploadElementRef.current?.files?.[0].name}.bin`
-              : "encryptedFile.bin"
-          }
+          download={$encryptedFileName.value}
         >
           \/ Download Encrypted File
         </a>
@@ -137,7 +165,7 @@ export const Encryption = (p: {
                 db,
                 balance,
                 file: {
-                  name: fileName,
+                  fileName: $fileName.value,
                   serializedEncryptionKeySalt: serializeUInt8Array(p.salt),
                   serializedInitializationVector: serializeUInt8Array(p.initializationVector),
                 },

@@ -8,7 +8,7 @@ export const createFileAndUpdateBalance = async (p: {
   db: TDb;
   file: Pick<
     z.infer<typeof fileSchema>,
-    "name" | "serializedEncryptionKeySalt" | "serializedInitializationVector"
+    "fileName" | "serializedEncryptionKeySalt" | "serializedInitializationVector"
   >;
   balance: z.infer<typeof balanceSchema>;
 }) => {
