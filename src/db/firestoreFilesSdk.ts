@@ -10,6 +10,7 @@ export const fileSchema = z.object({
   id: z.string(),
   uid: z.string(),
   fileName: z.string(),
+  encryptedFileName: z.string(),
   serializedEncryptionKeySalt: z.string(),
   serializedInitializationVector: z.string(),
   createdAt: timestampSchema,
@@ -32,6 +33,9 @@ const subscribeToMyFiles = (p: {
   const q = query(collection(p.db, filesCollectionName), where("uid", "==", p.uid));
 
   const unsub = onSnapshot(q, (querySnapshot) => {
+    const hasPendingWrites = querySnapshot.metadata.hasPendingWrites;
+    if (hasPendingWrites) return;
+
     const docs = querySnapshot.docs.map((x) => x.data());
     const parsedDocs = docs.map((x) => fileSchema.safeParse(x));
 

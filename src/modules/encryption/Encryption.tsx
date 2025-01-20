@@ -166,6 +166,7 @@ export const Encryption = (p: {
                 balance,
                 file: {
                   fileName: $fileName.value,
+                  encryptedFileName: $encryptedFileName.value,
                   serializedEncryptionKeySalt: serializeUInt8Array(p.salt),
                   serializedInitializationVector: serializeUInt8Array(p.initializationVector),
                 },

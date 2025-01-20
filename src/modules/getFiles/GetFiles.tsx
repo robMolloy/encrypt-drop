@@ -41,11 +41,10 @@ const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number })
       </tr>
       <tr>
         <td className="col-span-5 p-2" colSpan={5}>
-          {$status.value}
           <div className="flex justify-end gap-2">
             {($status.value === "init" || $status.value === "loading") && (
               <button
-                className={`btn btn-primary btn-xs`}
+                className={`btn btn-primary btn-sm`}
                 onClick={async () => {
                   $status.set("loading");
 
@@ -62,10 +61,8 @@ const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number })
             )}
             {$status.value === "failed" && (
               <button
-                className={`btn btn-error btn-xs`}
-                onClick={async () => {
-                  $status.set("init");
-                }}
+                className={`btn btn-error btn-sm`}
+                onClick={async () => $status.set("encrypted_file_downloaded")}
               >
                 Try again
               </button>
@@ -81,7 +78,7 @@ const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number })
                   className="input input-sm input-bordered w-full max-w-xs"
                 />
                 <button
-                  className={`btn btn-primary btn-xs`}
+                  className={`btn btn-primary btn-sm`}
                   onClick={async () => {
                     const saltResponse = deserializeUInt8Array(p.file.serializedEncryptionKeySalt);
                     if (!$encryptedBlob.value || !saltResponse.success) return;
@@ -110,23 +107,13 @@ const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number })
             )}
             {$status.value === "file_decrypted" && $decryptedBlob.value && (
               <a
-                className={`btn btn-primary btn-xs`}
+                className={`btn btn-primary btn-sm`}
                 href={URL.createObjectURL($decryptedBlob.value)}
                 download={p.file.fileName}
               >
                 Save Decrypted File
               </a>
             )}
-            {/*
-            {$encryptedBlob.value && (
-              <a
-                className={`btn btn-primary btn-xs`}
-                href={URL.createObjectURL($encryptedBlob.value)}
-                download={p.file.name}
-              >
-                <>Save Decrypted File</>
-              </a>
-            )} */}
           </div>
         </td>
       </tr>
