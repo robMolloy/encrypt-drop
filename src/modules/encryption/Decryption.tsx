@@ -4,8 +4,8 @@ import { decryptFile } from "./utils";
 
 export const Decryption = (p: {
   password: string;
-  salt: Uint8Array;
-  initializationVector: Uint8Array;
+  serializedEncryptionKeySalt: string;
+  serializedInitializationVector: string;
 }) => {
   const notifyStore = useNotifyStore();
 
@@ -71,16 +71,16 @@ export const Decryption = (p: {
         onClick={async () => {
           if (!encryptedFileBuffer) return;
           const response = await decryptFile({
-            initializationVector: p.initializationVector,
+            serializedInitializationVector: p.serializedInitializationVector,
             password: p.password,
-            salt: p.salt,
+            serializedEncryptionKeySalt: p.serializedEncryptionKeySalt,
             encryptedFileBuffer,
           });
 
           if (response.success) return setDecryptedFileBuffer(response.data);
           notifyStore.push({
             type: "alert-warning",
-            children: response.error.message
+            children: response.error?.message
               ? response.error.message
               : "Unable to decrypt: likely due to an incorrect password or encryptionKeySalt",
           });

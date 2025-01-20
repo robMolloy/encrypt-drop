@@ -1,17 +1,18 @@
-import { auth, db, storage } from "@/config/firebaseConfig";
+import { db, storage } from "@/config/firebaseConfig";
+import { uploadFileBlob } from "@/db/firebaseStorageSdkUtils";
 import { balancesSdk } from "@/db/firestoreBalancesSdk";
 import { createFileAndUpdateBalance } from "@/db/firestoreFilesAndBalancesSdk";
 import { convertArrayBufferToBlob } from "@/utils/dataTypeUtils";
+import { $ } from "@/utils/useReactive";
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
-import { encryptFile, serializeUInt8Array } from "./utils";
-import { uploadFileBlob } from "@/db/firebaseStorageSdkUtils";
-import { $ } from "@/utils/useReactive";
+import { encryptFile } from "./utils";
 
 export const Encryption = (p: {
+  uid: string | undefined;
   password: string;
-  salt: Uint8Array;
-  initializationVector: Uint8Array;
+  serializedEncryptionKeySalt: string | undefined;
+  serializedInitializationVector: string | undefined;
 }) => {
   const notifyStore = useNotifyStore();
 
@@ -73,19 +74,24 @@ export const Encryption = (p: {
         type="button"
         className="btn btn-primary"
         onClick={async () => {
-          if (!unencryptedFileBuffer) return;
+          if (
+            !unencryptedFileBuffer ||
+            !p.serializedEncryptionKeySalt ||
+            !p.serializedInitializationVector
+          )
+            return;
 
           const response = await encryptFile({
-            initializationVector: p.initializationVector,
             password: p.password,
-            salt: p.salt,
+            serializedInitializationVector: p.serializedInitializationVector,
+            serializedEncryptionKeySalt: p.serializedEncryptionKeySalt,
             unencryptedFileBuffer,
           });
 
           if (response.success) return setEncryptedFileBuffer(response.data);
           notifyStore.push({
             type: "alert-warning",
-            children: response.error.message ? response.error.message : "Unable to encrypt",
+            children: response.error?.message ? response.error.message : "Unable to encrypt",
           });
         }}
       >
@@ -147,11 +153,10 @@ export const Encryption = (p: {
               if (!encryptedFileBuffer)
                 return { success: false, error: { message: "encrypted file not found" } } as const;
 
-              const uid = auth.currentUser?.uid;
-              if (!uid)
+              if (!p.uid)
                 return { success: false, error: { message: "user not logged in" } } as const;
 
-              const balancesResponse = await balancesSdk.getDoc({ db, id: uid });
+              const balancesResponse = await balancesSdk.getDoc({ db, id: p.uid });
               if (!balancesResponse.success)
                 return {
                   success: false,
@@ -161,14 +166,17 @@ export const Encryption = (p: {
               if (balance.numberOfCoupons <= 0)
                 return { success: false, error: { message: "insufficient balance" } } as const;
 
+              if (!p.serializedEncryptionKeySalt) return { success: false } as const;
+              if (!p.serializedInitializationVector) return { success: false } as const;
+
               const response = await createFileAndUpdateBalance({
                 db,
                 balance,
                 file: {
                   fileName: $fileName.value,
                   encryptedFileName: $encryptedFileName.value,
-                  serializedEncryptionKeySalt: serializeUInt8Array(p.salt),
-                  serializedInitializationVector: serializeUInt8Array(p.initializationVector),
+                  serializedEncryptionKeySalt: p.serializedEncryptionKeySalt,
+                  serializedInitializationVector: p.serializedInitializationVector,
                 },
               });
               if (!response.success)
@@ -192,7 +200,7 @@ export const Encryption = (p: {
                     children: (
                       <>
                         <div>Could not upload file</div>
-                        <div>{response.error.message}</div>
+                        <div>{response.error?.message}</div>
                       </>
                     ),
                   },

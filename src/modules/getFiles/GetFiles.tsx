@@ -91,10 +91,10 @@ const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number })
                     const initializationVector = initializationVectorResponse.data;
                     if (!initializationVector) return;
                     const response = await decryptFile({
-                      initializationVector,
+                      serializedInitializationVector: p.file.serializedInitializationVector,
                       encryptedFileBuffer,
                       password: $password.value,
-                      salt: saltResponse.data,
+                      serializedEncryptionKeySalt: p.file.serializedEncryptionKeySalt,
                     });
                     if (!response.success) return $status.set("failed");
                     $decryptedBlob.set(convertArrayBufferToBlob(response.data));

@@ -1,4 +1,5 @@
 import { Typography } from "@/components";
+import { auth } from "@/config/firebaseConfig";
 import {
   Decryption,
   deserializeUInt8Array,
@@ -142,16 +143,17 @@ const Parent = () => {
             <div className="card-body">
               <span className={mode === "Encrypt" ? "" : "hidden"}>
                 <Encryption
+                  uid={auth.currentUser?.uid}
                   password={password}
-                  salt={encryptionKeySalt}
-                  initializationVector={initializationVector}
+                  serializedEncryptionKeySalt={serialisedEncryptionKeySalt}
+                  serializedInitializationVector={serialisedInitializationVector}
                 />
               </span>
               <span className={mode === "Decrypt" ? "" : "hidden"}>
                 <Decryption
                   password={password}
-                  salt={encryptionKeySalt}
-                  initializationVector={initializationVector}
+                  serializedEncryptionKeySalt={serialisedEncryptionKeySalt}
+                  serializedInitializationVector={serialisedInitializationVector}
                 />
               </span>
               <span className={mode === "Get" ? "" : "hidden"}>

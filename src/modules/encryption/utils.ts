@@ -5,43 +5,63 @@ export const generateEncryptionKeySalt = async () => {
   return crypto.getRandomValues(new Uint8Array(16));
 };
 
-export const deriveEncryptionKey = async (x: { password: string; salt: Uint8Array }) => {
-  const encoder = new TextEncoder();
-  const keyMaterial = await window.crypto.subtle.importKey(
-    "raw",
-    encoder.encode(x.password),
-    "PBKDF2",
-    false,
-    ["deriveKey"],
-  );
+export const deriveEncryptionKey = async (x: {
+  password: string;
+  serializedEncryptionKeySalt: string;
+}) => {
+  try {
+    const encryptionKeySaltResponse = deserializeUInt8Array(x.serializedEncryptionKeySalt);
+    if (!encryptionKeySaltResponse.success) return { success: false } as const;
 
-  return await window.crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt: x.salt,
-      iterations: 100000,
-      hash: "SHA-256",
-    },
-    keyMaterial,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt", "decrypt"],
-  );
+    const encoder = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+      "raw",
+      encoder.encode(x.password),
+      "PBKDF2",
+      false,
+      ["deriveKey"],
+    );
+
+    const data = await window.crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: encryptionKeySaltResponse.data,
+        iterations: 100000,
+        hash: "SHA-256",
+      },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"],
+    );
+    return { success: true, data } as const;
+  } catch (e) {
+    const error = e as { message: string };
+    console.error(`utils.ts:${/*LL*/ 16}`, { error });
+    return { success: false, error } as const;
+  }
 };
 
 export const decryptFile = async (x: {
-  initializationVector: Uint8Array;
+  serializedInitializationVector: string;
   password: string;
-  salt: Uint8Array;
+  serializedEncryptionKeySalt: string;
   encryptedFileBuffer: ArrayBuffer;
 }) => {
   try {
-    const encryptionKey = await deriveEncryptionKey({
+    const initializationVectorResponse = deserializeUInt8Array(x.serializedInitializationVector);
+    const encryptionKeySaltResponse = deserializeUInt8Array(x.serializedEncryptionKeySalt);
+    if (!initializationVectorResponse.success || !encryptionKeySaltResponse.success)
+      return { success: false } as const;
+
+    const encryptionKeyResponse = await deriveEncryptionKey({
       password: x.password,
-      salt: x.salt,
+      serializedEncryptionKeySalt: x.serializedEncryptionKeySalt,
     });
+    if (!encryptionKeyResponse.success) return { success: false } as const;
+    const encryptionKey = encryptionKeyResponse.data;
     const decryptedFile = await window.crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: x.initializationVector },
+      { name: "AES-GCM", iv: initializationVectorResponse.data },
       encryptionKey,
       x.encryptedFileBuffer,
     );
@@ -55,19 +75,25 @@ export const decryptFile = async (x: {
 };
 
 export const encryptFile = async (x: {
-  initializationVector: Uint8Array;
   password: string;
-  salt: Uint8Array;
+  serializedInitializationVector: string;
+  serializedEncryptionKeySalt: string;
   unencryptedFileBuffer: ArrayBuffer;
 }) => {
   try {
-    const encryptionKey = await deriveEncryptionKey({
+    const encryptionKeySaltResponse = deserializeUInt8Array(x.serializedEncryptionKeySalt);
+    if (!encryptionKeySaltResponse.success) return { success: false } as const;
+    const initializationVectorResponse = deserializeUInt8Array(x.serializedInitializationVector);
+    if (!initializationVectorResponse.success) return { success: false } as const;
+    const encryptionKeyResponse = await deriveEncryptionKey({
       password: x.password,
-      salt: x.salt,
+      serializedEncryptionKeySalt: x.serializedEncryptionKeySalt,
     });
+    if (!encryptionKeyResponse.success) return { success: false } as const;
+
     const encryptedFile = await window.crypto.subtle.encrypt(
-      { name: "AES-GCM", iv: x.initializationVector },
-      encryptionKey,
+      { name: "AES-GCM", iv: initializationVectorResponse.data },
+      encryptionKeyResponse.data,
       x.unencryptedFileBuffer,
     );
     return { success: true, data: encryptedFile } as const;
