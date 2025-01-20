@@ -2,7 +2,7 @@ import { storage } from "@/config/firebaseConfig";
 import { downloadFileBlob } from "@/db/firebaseStorageSdkUtils";
 import { fileSchema } from "@/db/firestoreFilesSdk";
 import { useFilesStore } from "@/stores/useFilesStore";
-import { convertBlobToArrayBuffer } from "@/utils/dataTypeUtils";
+import { convertArrayBufferToBlob, convertBlobToArrayBuffer } from "@/utils/dataTypeUtils";
 import { $ } from "@/utils/useReactive";
 import React from "react";
 import { z } from "zod";
@@ -20,10 +20,12 @@ const TableHeadingRowContents = () => {
   );
 };
 const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number }) => {
-  const $status = $<"init" | "loading" | "encrypted_file_downloaded" | "failed">("init");
+  const $status = $<"init" | "loading" | "encrypted_file_downloaded" | "file_decrypted" | "failed">(
+    "init",
+  );
   const $password = $("");
   const $encryptedBlob = $<Blob>();
-  // const $unencryptedBlob = $<Blob>();
+  const $decryptedBlob = $<Blob>();
   return (
     <>
       <tr className="b border-b-0">
@@ -69,7 +71,7 @@ const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number })
               </button>
             )}
 
-            {$encryptedBlob.value && (
+            {$status.value === "encrypted_file_downloaded" && (
               <>
                 <input
                   value={$password.value}
@@ -84,7 +86,7 @@ const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number })
                     const saltResponse = deserializeUInt8Array(p.file.serializedEncryptionKeySalt);
                     if (!$encryptedBlob.value || !saltResponse.success) return;
                     const initializationVectorResponse = await deserializeUInt8Array(
-                      "[219,88,240,231,244,196,17,133,19,222,121,228]",
+                      p.file.serializedInitializationVector,
                     );
                     const encryptedFileBuffer = await convertBlobToArrayBuffer(
                       $encryptedBlob.value,
@@ -97,22 +99,25 @@ const DisplayFileTableRow = (p: { file: z.infer<typeof fileSchema>; i: number })
                       password: $password.value,
                       salt: saltResponse.data,
                     });
-                    console.log(`GetFiles.tsx:${/*LL*/ 92}`, { response });
+                    if (!response.success) return $status.set("failed");
+                    $decryptedBlob.set(convertArrayBufferToBlob(response.data));
+                    $status.set("file_decrypted");
                   }}
                 >
                   Decrypt File
                 </button>
               </>
             )}
-            {/* {$encryptedBlob.value && (
+            {$status.value === "file_decrypted" && $decryptedBlob.value && (
               <a
                 className={`btn btn-primary btn-xs`}
-                href={URL.createObjectURL($encryptedBlob.value)}
+                href={URL.createObjectURL($decryptedBlob.value)}
                 download={p.file.name}
               >
-                Save Encrypted File
+                Save Decrypted File
               </a>
             )}
+            {/*
             {$encryptedBlob.value && (
               <a
                 className={`btn btn-primary btn-xs`}

@@ -6,7 +6,10 @@ import { creatifyDoc, updatifyDoc } from "@/utils/firestoreSdkUtils/firestoreUti
 
 export const createFileAndUpdateBalance = async (p: {
   db: TDb;
-  file: Pick<z.infer<typeof fileSchema>, "name" | "serializedEncryptionKeySalt">;
+  file: Pick<
+    z.infer<typeof fileSchema>,
+    "name" | "serializedEncryptionKeySalt" | "serializedInitializationVector"
+  >;
   balance: z.infer<typeof balanceSchema>;
 }) => {
   const fileId = getNextFileId({ balance: p.balance });

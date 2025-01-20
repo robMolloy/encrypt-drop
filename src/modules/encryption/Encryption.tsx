@@ -136,7 +136,11 @@ export const Encryption = (p: {
               const response = await createFileAndUpdateBalance({
                 db,
                 balance,
-                file: { name: fileName, serializedEncryptionKeySalt: serializeUInt8Array(p.salt) },
+                file: {
+                  name: fileName,
+                  serializedEncryptionKeySalt: serializeUInt8Array(p.salt),
+                  serializedInitializationVector: serializeUInt8Array(p.initializationVector),
+                },
               });
               if (!response.success)
                 return {

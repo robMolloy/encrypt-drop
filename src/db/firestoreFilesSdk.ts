@@ -11,6 +11,7 @@ export const fileSchema = z.object({
   uid: z.string(),
   name: z.string(),
   serializedEncryptionKeySalt: z.string(),
+  serializedInitializationVector: z.string(),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
 });
