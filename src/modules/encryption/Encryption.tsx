@@ -7,6 +7,7 @@ import { $ } from "@/utils/useReactive";
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
 import { encryptFile } from "./utils";
+import { DocumentArrowDownIcon, CloudArrowUpIcon } from "@heroicons/react/24/outline";
 
 export const Encryption = (p: {
   uid: string | undefined;
@@ -140,7 +141,7 @@ export const Encryption = (p: {
           }
           download={$encryptedFileName.value}
         >
-          \/ Download Encrypted File
+          <DocumentArrowDownIcon className="size-6" /> Download Encrypted File
         </a>
         <button
           disabled={step !== "download-file"}
@@ -207,7 +208,11 @@ export const Encryption = (p: {
             );
           }}
         >
-          {!$isUploadEncrytedFileLoading.value && <div>^ Upload Encrypted File</div>}
+          {!$isUploadEncrytedFileLoading.value && (
+            <>
+              <CloudArrowUpIcon className="size-6" /> Upload Encrypted File
+            </>
+          )}
           {$isUploadEncrytedFileLoading.value && (
             <span className="loading loading-spinner loading-sm" />
           )}
