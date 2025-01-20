@@ -1,5 +1,11 @@
+import { EncryptScreen } from "@/screens/EncryptScreen";
+
 const EncryptPage = () => {
-  return <div>Encrypt.page </div>;
+  return (
+    <>
+      <EncryptScreen />
+    </>
+  );
 };
 
 export default EncryptPage;

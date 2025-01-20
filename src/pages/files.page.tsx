@@ -1,5 +1,11 @@
+import { FilesScreen } from "@/screens/FilesScreen";
+
 const FilesPage = () => {
-  return <div>files.page </div>;
+  return (
+    <>
+      <FilesScreen />
+    </>
+  );
 };
 
 export default FilesPage;

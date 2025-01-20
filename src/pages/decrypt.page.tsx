@@ -1,5 +1,11 @@
+import { DecryptScreen } from "@/screens/DecryptScreen";
+
 const DecryptPage = () => {
-  return <div>Decrypt.page </div>;
+  return (
+    <>
+      <DecryptScreen />
+    </>
+  );
 };
 
 export default DecryptPage;
