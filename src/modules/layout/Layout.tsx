@@ -63,19 +63,29 @@ export const Layout = (p: { children: React.ReactNode }) => {
             <NavBar
               leftChildren={
                 <div className="flex items-center gap-2 pl-4">
-                  <div className="block sm:hidden">
+                  <div className="block md:hidden">
                     <OpenDrawerWrapper>
-                      <Bars3Icon />
+                      <Bars3Icon className="size-8" />
                     </OpenDrawerWrapper>
                   </div>
-                  <Link href="/" className="p-0 text-3xl hover:underline">
-                    EncryptDrop
+                  <Link href="/" className="p-0 text-2xl hover:underline">
+                    <div className="hidden md:block">EncryptDrop</div>
+                    <div className="block md:hidden">ED</div>
                   </Link>
                 </div>
               }
               rightChildren={
                 <>
                   <div className="flex w-full items-center justify-end gap-6">
+                    <Link className="link no-underline hover:underline" href="/encrypt">
+                      Encrypt
+                    </Link>
+                    <Link className="link no-underline hover:underline" href="/decrypt">
+                      Decrypt
+                    </Link>
+                    <Link className="link no-underline hover:underline" href="/files">
+                      Files
+                    </Link>
                     <div className="link no-underline">
                       {safeAuthStore.status === "logged_in" && (
                         <div>Coupons: {safeBalanceStore.balance?.numberOfCoupons ?? "0"}</div>
