@@ -25,7 +25,6 @@ export const EncryptScreen = () => {
             />
 
             <br />
-            <div role="tablist" className="tabs tabs-bordered w-full"></div>
             <Encryption
               uid={auth.currentUser?.uid}
               password={password}

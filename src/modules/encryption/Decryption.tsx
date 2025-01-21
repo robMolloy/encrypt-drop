@@ -111,7 +111,7 @@ export const Decryption = (p: {
               )
             : "#"
         }
-        download={fileNameAndExtension}
+        download={step === "download-file" ? fileNameAndExtension : true}
       >
         Download Decrypted File
       </a>
