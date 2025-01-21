@@ -2,7 +2,7 @@ import { useNotifyStore } from "@/modules/notify";
 import { useState } from "react";
 import { AuthCreateUserForm, AuthLoginUserForm } from ".";
 
-export const UserAuthCreateLoginForm = () => {
+export const UserAuthCreateLoginForm = (p: { onSuccess: () => void }) => {
   const [formData, setFormData] = useState({
     userEmail: "",
     userPassword: "",
@@ -40,6 +40,7 @@ export const UserAuthCreateLoginForm = () => {
             onFormDataChange={(newFormData) => setFormData({ ...formData, ...newFormData })}
             onLoginSuccess={() => {
               notifyStore.push({ type: "alert-success", children: "login success" });
+              p.onSuccess();
             }}
             onLoginFail={(errMsgObj) => {
               const errMsg =
@@ -56,6 +57,7 @@ export const UserAuthCreateLoginForm = () => {
             onFormDataChange={(newFormData) => setFormData({ ...formData, ...newFormData })}
             onCreateUserSuccess={() => {
               notifyStore.push({ type: "alert-success", children: "user created success" });
+              p.onSuccess();
             }}
             onCreateUserFail={(initErrMsg) => {
               const errMsg = initErrMsg ? initErrMsg : "unknown error";

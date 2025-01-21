@@ -26,7 +26,7 @@ export const Keys = (p: {
     p.onChange({ serialisedEncryptionKeySalt, serialisedInitializationVector });
   }, [serialisedEncryptionKeySalt, serialisedInitializationVector]);
   return (
-    <div className="bord rounded-xs collapse border-[1px] border-white">
+    <div className="rounded-xs collapse border-[1px] border-white">
       <input type="checkbox" />
       <div className="collapse-title text-xl font-medium">Click to review keys</div>
       <div className="collapse-content">

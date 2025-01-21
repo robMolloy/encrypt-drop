@@ -7,6 +7,8 @@ import { ThemeSelector } from "../themeSelector";
 import { NavBar, NavBarDropdown } from "./NavBar";
 import { useBalanceStore } from "@/stores/useBalanceStore";
 import { useFilesStore } from "@/stores/useFilesStore";
+import { useRef } from "react";
+import { UserAuthCreateLoginForm } from "../authUserForm";
 
 export type TPageLink = {
   label: string;
@@ -54,6 +56,8 @@ export const Layout = (p: { children: React.ReactNode }) => {
   const safeBalanceStore = balanceStore.getSafeStore();
   const filesStore = useFilesStore();
 
+  const loginModalRef = useRef<HTMLDialogElement>(null);
+
   return (
     <>
       <div className="drawer">
@@ -86,26 +90,15 @@ export const Layout = (p: { children: React.ReactNode }) => {
                     <Link className="link no-underline hover:underline" href="/files">
                       Files
                     </Link>
-                    <div className="link no-underline">
-                      {safeAuthStore.status === "logged_in" && (
-                        <div>Coupons: {safeBalanceStore.balance?.numberOfCoupons ?? "0"}</div>
-                      )}
-                    </div>
-                    <NavBarDropdown
-                      labelChildren={(p: { tabIndex: 0 }) => (
-                        <div className="link no-underline hover:underline" tabIndex={p.tabIndex}>
-                          <div>Theme &#x25BC;</div>
-                        </div>
-                      )}
-                    >
-                      <div className="overflow-y-auto p-4">
-                        <ThemeSelector />
-                      </div>
-                    </NavBarDropdown>
                     {safeAuthStore.status === "logged_in" && (
-                      <Link
-                        className="link no-underline hover:underline"
-                        href="/"
+                      <div className="link text-nowrap no-underline">
+                        Coupons: {safeBalanceStore.balance?.numberOfCoupons ?? "0"}
+                      </div>
+                    )}
+
+                    {safeAuthStore.status === "logged_in" && (
+                      <div
+                        className="link text-nowrap no-underline"
                         onClick={() => {
                           filesStore.clear();
                           balanceStore.clear();
@@ -113,7 +106,30 @@ export const Layout = (p: { children: React.ReactNode }) => {
                         }}
                       >
                         Log Out
-                      </Link>
+                      </div>
+                    )}
+                    {safeAuthStore.status === "logged_out" && (
+                      <>
+                        <div
+                          className="link text-nowrap no-underline"
+                          onClick={() => loginModalRef.current?.showModal()}
+                        >
+                          Log In
+                        </div>
+                        <dialog ref={loginModalRef} className="modal">
+                          <div className="modal-box">
+                            <form method="dialog">
+                              <button className="btn btn-circle btn-ghost btn-sm absolute right-2 top-2">
+                                ✕
+                              </button>
+                              <br />
+                            </form>
+                            <UserAuthCreateLoginForm
+                              onSuccess={() => loginModalRef.current?.close()}
+                            />
+                          </div>
+                        </dialog>
+                      </>
                     )}
                   </div>
                 </>

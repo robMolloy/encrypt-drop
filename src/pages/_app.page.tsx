@@ -1,11 +1,9 @@
-import { Typography } from "@/components";
 import { auth, db } from "@/config/firebaseConfig";
 import { balancesSdk } from "@/db/firestoreBalancesSdk";
 import { filesSdk } from "@/db/firestoreFilesSdk";
-import { UserAuthCreateLoginForm } from "@/modules/authUserForm";
 import { Layout } from "@/modules/layout";
 import { Notify } from "@/modules/notify";
-import { useAuthStore, useAuthStoreBase } from "@/stores/useAuthStore";
+import { useAuthStoreBase } from "@/stores/useAuthStore";
 import { useBalanceStore } from "@/stores/useBalanceStore";
 import { useFilesStore } from "@/stores/useFilesStore";
 import "@/styles/globals.css";
@@ -16,8 +14,6 @@ import { useEffect } from "react";
 
 export default function App({ Component, pageProps }: AppProps) {
   const authStoreBase = useAuthStoreBase();
-  const authStore = useAuthStore();
-  const safeAuthStore = authStore.getSafeStore();
   const balanceStore = useBalanceStore();
   const filesStore = useFilesStore();
 
@@ -53,13 +49,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Notify />
 
       <Layout>
-        {safeAuthStore.status === "loading" && <div>Loading...</div>}
-        {safeAuthStore.status === "logged_in" && <Component {...pageProps} />}
-        {safeAuthStore.status === "logged_out" && (
-          <Typography fullPage>
-            <UserAuthCreateLoginForm />
-          </Typography>
-        )}
+        <Component {...pageProps} />
       </Layout>
     </>
   );
