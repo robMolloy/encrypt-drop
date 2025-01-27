@@ -8,14 +8,10 @@ import { CloudArrowUpIcon, DocumentArrowDownIcon } from "@heroicons/react/24/out
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
 import { Keys } from "./Keys";
+import { encryptFile } from "./utils";
+import { downloadFile } from "@/utils/fileUtils";
+import { fail, success } from "@/utils/devUtils";
 // import { encryptFile } from "./utils";
-
-// const success = <T extends object>(p?: { data: T }) => {
-//   return { success: true, data: p?.data } as const;
-// };
-// const fail = <T extends { message?: string }>(p?: { error: T }) => {
-//   return { success: false, error: p?.error } as const;
-// };
 
 export const Encryption = (p: { uid: string | undefined }) => {
   const notifyStore = useNotifyStore();
@@ -25,17 +21,33 @@ export const Encryption = (p: { uid: string | undefined }) => {
   const $serializedInitializationVector = useReactive("");
   const fileUploadElementRef = useRef<HTMLInputElement>(null);
   const [unencryptedFileBuffer, setUnencryptedFileBuffer] = useState<ArrayBuffer>();
-  const [encryptedFileBuffer, setEncryptedFileBuffer] = useState<ArrayBuffer>();
-  const $isUploadEncrytedFileLoading = $(false);
+  const $isUploading = $(false);
+  const $isDownloading = $(false);
 
   const step = (() => {
     if (!unencryptedFileBuffer) return "add-file";
-    if (!encryptedFileBuffer) return "encrypt-file";
     return "download-file";
   })();
 
   const $fileName = $("");
   const $encryptedFileName = $("");
+
+  const resetForm = () => {
+    setUnencryptedFileBuffer(undefined);
+    $fileName.set("");
+    $encryptedFileName.set("");
+
+    if (fileUploadElementRef.current) fileUploadElementRef.current.value = "";
+  };
+
+  const getFileFromInput = () => {
+    const fileInput = fileUploadElementRef.current;
+    if (!fileInput) return fail({ error: { message: "No file input element found" } });
+
+    const file = fileInput.files?.[0];
+    if (!file) return fail({ error: { message: "No file selected" } });
+    return success({ data: file });
+  };
 
   return (
     <span className="flex flex-col gap-4">
@@ -45,12 +57,11 @@ export const Encryption = (p: { uid: string | undefined }) => {
           type="file"
           className="file-input w-full cursor-pointer"
           onInput={async () => {
-            const fileInput = fileUploadElementRef.current;
-            if (!fileInput) return { success: false } as const;
+            const getFileDataResponse = getFileFromInput();
 
-            const file = fileInput.files?.[0];
-            if (!file) return { success: false } as const;
+            if (!getFileDataResponse.success) return resetForm();
 
+            const file = getFileDataResponse.data;
             const fileBuffer = await file.arrayBuffer();
             setUnencryptedFileBuffer(fileBuffer);
             $fileName.set(file.name);
@@ -65,7 +76,6 @@ export const Encryption = (p: { uid: string | undefined }) => {
 
             fileInput.value = "";
             setUnencryptedFileBuffer(undefined);
-            setEncryptedFileBuffer(undefined);
             $fileName.set("");
             $encryptedFileName.set("");
           }}
@@ -114,29 +124,50 @@ export const Encryption = (p: { uid: string | undefined }) => {
       </label>
 
       <span className="flex gap-2">
-        <a
-          type="button"
-          className={`btn flex-1 ${step === "add-file" ? "btn-disabled" : "btn-primary"}`}
-          href={
-            encryptedFileBuffer
-              ? URL.createObjectURL(convertArrayBufferToBlob(encryptedFileBuffer))
-              : "#"
-          }
-          download={step === "download-file" ? $encryptedFileName.value : true}
+        <button
+          className="btn btn-primary flex-1"
+          disabled={step === "add-file" || $isDownloading.value}
+          onClick={async () => {
+            if ($isDownloading.value) return;
+
+            $isDownloading.set(true);
+
+            const encryptFileResponse = await (() => {
+              if (!unencryptedFileBuffer) return fail({ error: { message: "No file selected" } });
+
+              return encryptFile({
+                password: $password.value,
+                serializedInitializationVector: $serializedInitializationVector.value,
+                serializedEncryptionKeySalt: $serializedEncryptionKeySalt.value,
+                unencryptedFileBuffer: unencryptedFileBuffer,
+              });
+            })();
+
+            $isDownloading.set(false);
+
+            if (!encryptFileResponse.success)
+              return notifyStore.push({
+                heading: "Could not encrypt file",
+              });
+
+            downloadFile({
+              fileName: $encryptedFileName.value,
+              fileBuffer: encryptFileResponse.data,
+            });
+          }}
         >
-          <DocumentArrowDownIcon className="size-6" /> Download Encrypted File
-        </a>
+          <DocumentArrowDownIcon className="size-6" />{" "}
+          {$isDownloading.value ? "Downloading..." : "Encrypt & Download"}
+        </button>
         {!p.uid && (
-          <>
-            <div className="tooltip flex-1" data-tip="You must be logged in to upload a file">
-              <button
-                className="btn btn-info w-full cursor-not-allowed"
-                disabled={step === "add-file"}
-              >
-                <CloudArrowUpIcon className="size-6" /> Upload Encrypted File
-              </button>
-            </div>
-          </>
+          <div className="tooltip flex-1" data-tip="You must be logged in to upload a file">
+            <button
+              className="btn btn-info w-full cursor-not-allowed"
+              disabled={step === "add-file"}
+            >
+              <CloudArrowUpIcon className="size-6" /> Upload Encrypted File
+            </button>
+          </div>
         )}
 
         {p.uid && (
@@ -144,16 +175,10 @@ export const Encryption = (p: { uid: string | undefined }) => {
             disabled={step === "add-file" || !p.uid}
             className="btn btn-primary flex-1"
             onClick={async () => {
-              if ($isUploadEncrytedFileLoading.value) return;
+              if ($isUploading.value) return;
 
-              $isUploadEncrytedFileLoading.set(true);
+              $isUploading.set(true);
               const response = await (async () => {
-                if (!encryptedFileBuffer)
-                  return {
-                    success: false,
-                    error: { message: "encrypted file not found" },
-                  } as const;
-
                 if (!p.uid)
                   return { success: false, error: { message: "user not logged in" } } as const;
 
@@ -169,6 +194,16 @@ export const Encryption = (p: { uid: string | undefined }) => {
 
                 if (!$serializedEncryptionKeySalt.value) return { success: false } as const;
                 if (!$serializedInitializationVector.value) return { success: false } as const;
+                if (!unencryptedFileBuffer) return { success: false } as const;
+
+                const encryptFileResponse = await encryptFile({
+                  password: $password.value,
+                  serializedInitializationVector: $serializedInitializationVector.value,
+                  serializedEncryptionKeySalt: $serializedEncryptionKeySalt.value,
+                  unencryptedFileBuffer: unencryptedFileBuffer,
+                });
+
+                if (!encryptFileResponse.success) return { success: false } as const;
 
                 const response = await createFileAndUpdateBalance({
                   db,
@@ -180,18 +215,19 @@ export const Encryption = (p: { uid: string | undefined }) => {
                     serializedInitializationVector: $serializedInitializationVector.value,
                   },
                 });
+                console.log(`Encryption.tsx:${/*LL*/ 224}`, { response });
                 if (!response.success)
                   return {
                     success: false,
                     error: { message: "unable to create file and update balance" } as const,
                   };
-                const blob = convertArrayBufferToBlob(encryptedFileBuffer);
+                const blob = convertArrayBufferToBlob(encryptFileResponse.data);
 
                 const snapshot = await uploadFileBlob({ storage, id: response.data.file.id, blob });
                 if (snapshot.success) return { success: true } as const;
                 return { success: false, error: { message: "file upload failed" } } as const;
               })();
-              $isUploadEncrytedFileLoading.set(false);
+              $isUploading.set(false);
 
               notifyStore.push(
                 response.success
@@ -208,14 +244,12 @@ export const Encryption = (p: { uid: string | undefined }) => {
               );
             }}
           >
-            {!$isUploadEncrytedFileLoading.value && (
+            {!$isUploading.value && (
               <>
-                <CloudArrowUpIcon className="size-6" /> Upload Encrypted File
+                <CloudArrowUpIcon className="size-6" /> Encrypt & Upload
               </>
             )}
-            {$isUploadEncrytedFileLoading.value && (
-              <span className="loading loading-spinner loading-sm" />
-            )}
+            {$isUploading.value && <span className="loading loading-spinner loading-sm" />}
           </button>
         )}
       </span>
