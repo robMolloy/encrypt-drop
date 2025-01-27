@@ -1,14 +1,13 @@
 import { auth } from "@/config/firebaseConfig";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useBalanceStore } from "@/stores/useBalanceStore";
+import { useFilesStore } from "@/stores/useFilesStore";
 import { logoutFirebaseUser } from "@/utils/firebaseAuthUtils";
 import { Bars3Icon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { ThemeSelector } from "../themeSelector";
-import { NavBar, NavBarDropdown } from "./NavBar";
-import { useBalanceStore } from "@/stores/useBalanceStore";
-import { useFilesStore } from "@/stores/useFilesStore";
 import { useRef } from "react";
 import { UserAuthCreateLoginForm } from "../authUserForm";
+import { NavBar } from "./NavBar";
 
 export type TPageLink = {
   label: string;
