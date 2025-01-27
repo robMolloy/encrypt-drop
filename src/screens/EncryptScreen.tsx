@@ -1,36 +1,21 @@
 import { Typography } from "@/components";
 import { auth } from "@/config/firebaseConfig";
-import { Encryption, PasswordInput } from "@/modules/encryption";
-import { Keys } from "@/modules/encryption/Keys";
-import { useState } from "react";
+import { Encryption } from "@/modules/encryption";
 
 export const EncryptScreen = () => {
-  const [password, setPassword] = useState("");
-
-  const [serialisedEncryptionKeySalt, setSerialisedEncryptionKeySalt] = useState<string>("");
-  const [serialisedInitializationVector, setSerialisedInitializationVector] = useState<string>("");
-
   return (
     <main className={`min-h-screen`}>
       <Typography fullPage>
         <div className="card w-full bg-neutral text-neutral-content">
           <div className="card-body">
-            <PasswordInput value={password} onChange={async (x) => setPassword(x)} />
+            <Encryption uid={auth.currentUser?.uid} />
             <br />
-            <Keys
+            {/* <Keys
               onChange={(val) => {
-                setSerialisedEncryptionKeySalt(val.serialisedEncryptionKeySalt);
-                setSerialisedInitializationVector(val.serialisedInitializationVector);
+                $serialisedEncryptionKeySalt.set(val.serialisedEncryptionKeySalt);
+                $serialisedInitializationVector.set(val.serialisedInitializationVector);
               }}
-            />
-
-            <br />
-            <Encryption
-              uid={auth.currentUser?.uid}
-              password={password}
-              serializedEncryptionKeySalt={serialisedEncryptionKeySalt}
-              serializedInitializationVector={serialisedInitializationVector}
-            />
+            /> */}
           </div>
         </div>
       </Typography>

@@ -1,13 +1,12 @@
 import { Typography } from "@/components";
-import { Decryption, PasswordInput } from "@/modules/encryption";
-import { Keys } from "@/modules/encryption/Keys";
+import { PasswordInput } from "@/modules/encryption";
 import { useState } from "react";
 
 export const DecryptScreen = () => {
   const [password, setPassword] = useState("");
 
-  const [serialisedEncryptionKeySalt, setSerialisedEncryptionKeySalt] = useState("");
-  const [serialisedInitializationVector, setSerialisedInitializationVector] = useState("");
+  // const [serialisedEncryptionKeySalt, setSerialisedEncryptionKeySalt] = useState("");
+  // const [serialisedInitializationVector, setSerialisedInitializationVector] = useState("");
 
   return (
     <main className={`min-h-screen`}>
@@ -16,18 +15,18 @@ export const DecryptScreen = () => {
           <div className="card-body">
             <PasswordInput value={password} onChange={async (x) => setPassword(x)} />
             <br />
-            <Keys
+            {/* <Keys
               onChange={(val) => {
                 setSerialisedEncryptionKeySalt(val.serialisedEncryptionKeySalt);
                 setSerialisedInitializationVector(val.serialisedInitializationVector);
               }}
-            />
+            /> */}
             <br />
-            <Decryption
+            {/* <Decryption
               password={password}
               serializedEncryptionKeySalt={serialisedEncryptionKeySalt}
               serializedInitializationVector={serialisedInitializationVector}
-            />
+            /> */}
           </div>
         </div>
       </Typography>

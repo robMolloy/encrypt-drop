@@ -3,27 +3,26 @@ import { uploadFileBlob } from "@/db/firebaseStorageSdkUtils";
 import { balancesSdk } from "@/db/firestoreBalancesSdk";
 import { createFileAndUpdateBalance } from "@/db/firestoreFilesAndBalancesSdk";
 import { convertArrayBufferToBlob } from "@/utils/dataTypeUtils";
-import { $ } from "@/utils/useReactive";
+import { $, useReactive } from "@/utils/useReactive";
 import { CloudArrowUpIcon, DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
-import { encryptFile } from "./utils";
+import { Keys } from "./Keys";
+// import { encryptFile } from "./utils";
 
-const success = <T extends object>(p?: { data: T }) => {
-  return { success: true, data: p?.data } as const;
-};
-const fail = <T extends { message?: string }>(p?: { error: T }) => {
-  return { success: false, error: p?.error } as const;
-};
+// const success = <T extends object>(p?: { data: T }) => {
+//   return { success: true, data: p?.data } as const;
+// };
+// const fail = <T extends { message?: string }>(p?: { error: T }) => {
+//   return { success: false, error: p?.error } as const;
+// };
 
-export const Encryption = (p: {
-  uid: string | undefined;
-  password: string;
-  serializedEncryptionKeySalt: string | undefined;
-  serializedInitializationVector: string | undefined;
-}) => {
+export const Encryption = (p: { uid: string | undefined }) => {
   const notifyStore = useNotifyStore();
 
+  const $password = useReactive("");
+  const $serializedEncryptionKeySalt = useReactive("");
+  const $serializedInitializationVector = useReactive("");
   const fileUploadElementRef = useRef<HTMLInputElement>(null);
   const [unencryptedFileBuffer, setUnencryptedFileBuffer] = useState<ArrayBuffer>();
   const [encryptedFileBuffer, setEncryptedFileBuffer] = useState<ArrayBuffer>();
@@ -42,7 +41,6 @@ export const Encryption = (p: {
     <span className="flex flex-col gap-4">
       <span className="flex gap-2">
         <input
-          disabled={step !== "add-file"}
           ref={fileUploadElementRef}
           type="file"
           className="file-input w-full cursor-pointer"
@@ -77,67 +75,39 @@ export const Encryption = (p: {
         </button>
       </span>
 
-      <button
-        disabled={step !== "encrypt-file"}
-        type="button"
-        className="btn btn-primary"
-        onClick={async () => {
-          const response = await (async () => {
-            if (!p.password) return fail({ error: { message: "Missing password" } });
-            if (!unencryptedFileBuffer) return fail({ error: { message: "Missing file" } });
-            if (!p.serializedEncryptionKeySalt)
-              return fail({ error: { message: "Missing encryption key salt" } });
-            if (!p.serializedInitializationVector)
-              return fail({ error: { message: "Missing initialization vector" } });
-
-            const response = await encryptFile({
-              password: p.password,
-              serializedInitializationVector: p.serializedInitializationVector,
-              serializedEncryptionKeySalt: p.serializedEncryptionKeySalt,
-              unencryptedFileBuffer,
-            });
-            if (!response.success) return fail({ error: { message: "Missing required data" } });
-            return success({ data: response.data });
-          })();
-          if (!response.success)
-            return notifyStore.push({
-              type: "alert-warning",
-              children: response.error?.message ? response.error.message : "Unable to encrypt",
-            });
-          setEncryptedFileBuffer(response.data);
-          notifyStore.push({
-            type: "alert-success",
-            children: "Encrypted successfully",
-          });
-        }}
-      >
-        Encrypt File
-      </button>
+      <label className="form-control w-full">
+        <div className={`label ${step === "add-file" ? "opacity-10" : ""}`}>
+          <span className="label-text">Password</span>
+        </div>
+        <input
+          type="password"
+          disabled={step === "add-file"}
+          value={step === "add-file" ? "" : $password.value}
+          onChange={(e) => $password.set(e.target.value)}
+          className="input input-bordered w-full"
+        />
+      </label>
 
       <label className="form-control w-full">
-        <div className={`label ${step !== "download-file" ? "opacity-10" : ""}`}>
-          <span className="label-text">
-            File name (include extension - .pdf, .doc, etc.). Only required if uploading
-          </span>
+        <div className={`label ${step === "add-file" ? "opacity-10" : ""}`}>
+          <span className="label-text">File name and extension (only required if uploading)</span>
         </div>
         <input
           type="text"
-          disabled={step !== "download-file"}
-          value={step !== "download-file" ? "" : $fileName.value}
+          disabled={step === "add-file"}
+          value={step === "add-file" ? "" : $fileName.value}
           onChange={(e) => $fileName.set(e.target.value)}
           className="input input-bordered w-full"
         />
       </label>
       <label className="form-control w-full">
-        <div className={`label ${step !== "download-file" ? "opacity-10" : ""}`}>
-          <span className="label-text">
-            Encrypted file name (include extension - .pdf, .doc, etc.)
-          </span>
+        <div className={`label ${step === "add-file" ? "opacity-10" : ""}`}>
+          <span className="label-text">Encrypted file name and extension</span>
         </div>
         <input
           type="text"
-          disabled={step !== "download-file"}
-          value={step !== "download-file" ? "" : $encryptedFileName.value}
+          disabled={step === "add-file"}
+          value={step === "add-file" ? "" : $encryptedFileName.value}
           onChange={(e) => $encryptedFileName.set(e.target.value)}
           className="input input-bordered w-full"
         />
@@ -146,7 +116,7 @@ export const Encryption = (p: {
       <span className="flex gap-2">
         <a
           type="button"
-          className={`btn flex-1 ${step === "download-file" ? "btn-primary" : "btn-disabled"}`}
+          className={`btn flex-1 ${step === "add-file" ? "btn-disabled" : "btn-primary"}`}
           href={
             encryptedFileBuffer
               ? URL.createObjectURL(convertArrayBufferToBlob(encryptedFileBuffer))
@@ -161,7 +131,7 @@ export const Encryption = (p: {
             <div className="tooltip flex-1" data-tip="You must be logged in to upload a file">
               <button
                 className="btn btn-info w-full cursor-not-allowed"
-                disabled={step !== "download-file"}
+                disabled={step === "add-file"}
               >
                 <CloudArrowUpIcon className="size-6" /> Upload Encrypted File
               </button>
@@ -171,7 +141,7 @@ export const Encryption = (p: {
 
         {p.uid && (
           <button
-            disabled={step !== "download-file" || !p.uid}
+            disabled={step === "add-file" || !p.uid}
             className="btn btn-primary flex-1"
             onClick={async () => {
               if ($isUploadEncrytedFileLoading.value) return;
@@ -197,8 +167,8 @@ export const Encryption = (p: {
                 if (balance.numberOfCoupons <= 0)
                   return { success: false, error: { message: "insufficient balance" } } as const;
 
-                if (!p.serializedEncryptionKeySalt) return { success: false } as const;
-                if (!p.serializedInitializationVector) return { success: false } as const;
+                if (!$serializedEncryptionKeySalt.value) return { success: false } as const;
+                if (!$serializedInitializationVector.value) return { success: false } as const;
 
                 const response = await createFileAndUpdateBalance({
                   db,
@@ -206,8 +176,8 @@ export const Encryption = (p: {
                   file: {
                     fileName: $fileName.value,
                     encryptedFileName: $encryptedFileName.value,
-                    serializedEncryptionKeySalt: p.serializedEncryptionKeySalt,
-                    serializedInitializationVector: p.serializedInitializationVector,
+                    serializedEncryptionKeySalt: $serializedEncryptionKeySalt.value,
+                    serializedInitializationVector: $serializedInitializationVector.value,
                   },
                 });
                 if (!response.success)
@@ -249,6 +219,13 @@ export const Encryption = (p: {
           </button>
         )}
       </span>
+      <Keys
+        generateNewKeysOnMount={true}
+        serialisedEncryptionKeySalt={$serializedEncryptionKeySalt.value}
+        serialisedInitializationVector={$serializedInitializationVector.value}
+        onSerialisedEncryptionKeySaltChange={(x) => $serializedEncryptionKeySalt.set(x)}
+        onSerialisedInitializationVectorChange={(x) => $serializedInitializationVector.set(x)}
+      />
     </span>
   );
 };

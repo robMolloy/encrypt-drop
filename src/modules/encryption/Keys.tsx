@@ -3,39 +3,30 @@ import {
   generateInitializationVector,
   serializeUInt8Array,
 } from "@/modules/encryption";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export const Keys = (p: {
-  onChange: (x: {
-    serialisedEncryptionKeySalt: string;
-    serialisedInitializationVector: string;
-  }) => void;
+  generateNewKeysOnMount: boolean;
+  serialisedEncryptionKeySalt: string;
+  serialisedInitializationVector: string;
+  onSerialisedEncryptionKeySaltChange: (x: string) => void;
+  onSerialisedInitializationVectorChange: (x: string) => void;
 }) => {
-  const [serialisedEncryptionKeySalt, setSerialisedEncryptionKeySalt] = useState<string>("");
-
-  const [serialisedInitializationVector, setSerialisedInitializationVector] = useState<string>("");
-
   useEffect(() => {
-    (async () => {
-      setSerialisedEncryptionKeySalt(serializeUInt8Array(await generateEncryptionKeySalt()));
-      setSerialisedInitializationVector(serializeUInt8Array(await generateInitializationVector()));
-    })();
+    if (!p.generateNewKeysOnMount) return;
+    p.onSerialisedEncryptionKeySaltChange(serializeUInt8Array(generateEncryptionKeySalt()));
+    p.onSerialisedInitializationVectorChange(serializeUInt8Array(generateInitializationVector()));
   }, []);
 
-  useEffect(() => {
-    p.onChange({ serialisedEncryptionKeySalt, serialisedInitializationVector });
-  }, [serialisedEncryptionKeySalt, serialisedInitializationVector]);
   return (
-    <div className="rounded-xs collapse border-[1px] border-white">
+    <div className="rounded-xs collapse-xs collapse border">
       <input type="checkbox" />
       <div className="collapse-title text-xl font-medium">Click to review keys</div>
       <div className="collapse-content">
         <p>
-          These are the keys used to encrypt and decrypt the file. It is important that all keys and
-          passwords are kept in order to decrypt the file. If the any key or password is lost it
-          will not be possible to decrypt the file.
+          Without these keys or the password you will not be able to decrypt the file. If you are
+          using the upload service, the keys are stored in the database.
         </p>
-        <p>If you are using the upload service, the keys are stored in the database.</p>
         <span className="flex items-end gap-2">
           <label className="form-control w-full">
             <div className="label">
@@ -43,8 +34,8 @@ export const Keys = (p: {
             </div>
             <input
               type="text"
-              value={serialisedEncryptionKeySalt}
-              onChange={(x) => setSerialisedEncryptionKeySalt(x.target.value)}
+              value={p.serialisedEncryptionKeySalt}
+              onChange={(x) => p.onSerialisedEncryptionKeySaltChange(x.target.value)}
               placeholder="Type here"
               className="input input-bordered w-full"
             />
@@ -52,8 +43,9 @@ export const Keys = (p: {
           <button
             className="btn btn-primary"
             onClick={async () => {
-              const tempEncryptionKeySalt = await generateEncryptionKeySalt();
-              setSerialisedEncryptionKeySalt(serializeUInt8Array(tempEncryptionKeySalt));
+              p.onSerialisedEncryptionKeySaltChange(
+                serializeUInt8Array(generateEncryptionKeySalt()),
+              );
             }}
           >
             New
@@ -66,17 +58,18 @@ export const Keys = (p: {
             </div>
             <input
               type="text"
-              value={serialisedInitializationVector}
-              onChange={(x) => setSerialisedInitializationVector(x.target.value)}
+              value={p.serialisedInitializationVector}
+              onChange={(e) => p.onSerialisedInitializationVectorChange(e.target.value)}
               placeholder="Type here"
               className="input input-bordered w-full"
             />
           </label>
           <button
             className="btn btn-primary"
-            onClick={async () => {
-              const tempInitializationVector = await generateInitializationVector();
-              setSerialisedInitializationVector(serializeUInt8Array(tempInitializationVector));
+            onClick={() => {
+              p.onSerialisedInitializationVectorChange(
+                serializeUInt8Array(generateInitializationVector()),
+              );
             }}
           >
             New

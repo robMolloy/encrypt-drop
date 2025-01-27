@@ -1,4 +1,5 @@
 export const PasswordInput = (p: {
+  disabled?: boolean;
   value: string;
   onChange: (x: string) => void;
   onBlur?: (x: string) => void;
@@ -24,6 +25,7 @@ export const PasswordInput = (p: {
         </svg>
         <input
           value={p.value}
+          disabled={p.disabled}
           onChange={(e) => p.onChange(e.target.value)}
           onBlur={() => {
             if (p.onBlur) p.onBlur(p.value);
