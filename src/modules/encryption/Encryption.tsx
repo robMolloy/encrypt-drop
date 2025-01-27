@@ -91,6 +91,7 @@ export const Encryption = (p: { uid: string | undefined }) => {
         </div>
         <input
           type="password"
+          placeholder="Type a password..."
           disabled={step === "add-file"}
           value={step === "add-file" ? "" : $password.value}
           onChange={(e) => $password.set(e.target.value)}
@@ -215,16 +216,12 @@ export const Encryption = (p: { uid: string | undefined }) => {
                     serializedInitializationVector: $serializedInitializationVector.value,
                   },
                 });
-                console.log(`Encryption.tsx:${/*LL*/ 224}`, { response });
                 if (!response.success)
-                  return {
-                    success: false,
-                    error: { message: "unable to create file and update balance" } as const,
-                  };
+                  return fail({ error: { message: "can't create file and update balance" } });
                 const blob = convertArrayBufferToBlob(encryptFileResponse.data);
 
                 const snapshot = await uploadFileBlob({ storage, id: response.data.file.id, blob });
-                if (snapshot.success) return { success: true } as const;
+                if (snapshot.success) return success({ data: { file: response.data.file } });
                 return { success: false, error: { message: "file upload failed" } } as const;
               })();
               $isUploading.set(false);
