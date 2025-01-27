@@ -1,120 +1,138 @@
-import { useEffect, useRef, useState } from "react";
+import { fail, success } from "@/utils/devUtils";
+import { downloadFile } from "@/utils/fileUtils";
+import { $, useReactive } from "@/utils/useReactive";
+import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
+import { useRef, useState } from "react";
 import { useNotifyStore } from "../notify";
+import { Keys } from "./Keys";
 import { decryptFile } from "./utils";
+// import { encryptFile } from "./utils";
 
-export const Decryption = (p: {
-  password: string;
-  serializedEncryptionKeySalt: string;
-  serializedInitializationVector: string;
-}) => {
+export const Decryption = () => {
   const notifyStore = useNotifyStore();
 
+  const $password = useReactive("");
+  const $serializedEncryptionKeySalt = useReactive("");
+  const $serializedInitializationVector = useReactive("");
   const fileUploadElementRef = useRef<HTMLInputElement>(null);
   const [encryptedFileBuffer, setEncryptedFileBuffer] = useState<ArrayBuffer>();
-  const [decryptedFileBuffer, setDecryptedFileBuffer] = useState<ArrayBuffer>();
-  const [fileNameAndExtension, setFileNameAndExtension] = useState<string>("");
-
-  useEffect(() => {
-    const tempFileName = fileUploadElementRef.current?.files?.[0]?.name;
-    if (!tempFileName) return setFileNameAndExtension("");
-
-    const newFileName =
-      tempFileName.slice(-4) === ".bin" ? tempFileName.slice(0, -4) : tempFileName;
-    setFileNameAndExtension(newFileName);
-  }, [fileUploadElementRef.current?.files?.[0]]);
+  const $isDownloading = $(false);
+  const $fileName = $("");
 
   const step = (() => {
     if (!encryptedFileBuffer) return "add-file";
-    if (!decryptedFileBuffer) return "decrypt-file";
     return "download-file";
   })();
+
+  const resetForm = () => {
+    setEncryptedFileBuffer(undefined);
+    $fileName.set("");
+
+    if (fileUploadElementRef.current) fileUploadElementRef.current.value = "";
+  };
+
+  const getFileFromInput = () => {
+    const fileInput = fileUploadElementRef.current;
+    if (!fileInput) return fail({ error: { message: "No file input element found" } });
+
+    const file = fileInput.files?.[0];
+    if (!file) return fail({ error: { message: "No file selected" } });
+    return success({ data: file });
+  };
 
   return (
     <span className="flex flex-col gap-4">
       <span className="flex gap-2">
         <input
-          disabled={step !== "add-file"}
           ref={fileUploadElementRef}
           type="file"
-          className="file-input w-full"
+          className="file-input w-full cursor-pointer"
           onInput={async () => {
-            const fileInput = fileUploadElementRef.current;
-            if (!fileInput) return { success: false } as const;
+            const getFileDataResponse = getFileFromInput();
 
-            const file = fileInput.files?.[0];
-            if (!file) return { success: false } as const;
+            if (!getFileDataResponse.success) return resetForm();
 
+            const file = getFileDataResponse.data;
             const fileBuffer = await file.arrayBuffer();
             setEncryptedFileBuffer(fileBuffer);
+            $fileName.set(file.name.split(".").slice(0, -1).join("."));
           }}
         />
         <button
           disabled={step === "add-file"}
-          onClick={() => {
-            const fileInput = fileUploadElementRef.current;
-            if (!fileInput) return { success: false } as const;
-
-            fileInput.value = "";
-            setEncryptedFileBuffer(undefined);
-            setDecryptedFileBuffer(undefined);
-          }}
+          onClick={() => resetForm()}
           className="btn btn-outline"
         >
           X
         </button>
       </span>
 
-      <button
-        disabled={step !== "decrypt-file"}
-        type="button"
-        className="btn btn-primary"
-        onClick={async () => {
-          if (!encryptedFileBuffer) return;
-          const response = await decryptFile({
-            serializedInitializationVector: p.serializedInitializationVector,
-            password: p.password,
-            serializedEncryptionKeySalt: p.serializedEncryptionKeySalt,
-            encryptedFileBuffer,
-          });
-
-          if (response.success) return setDecryptedFileBuffer(response.data);
-          notifyStore.push({
-            type: "alert-warning",
-            children: response.error?.message
-              ? response.error.message
-              : "Unable to decrypt: likely due to an incorrect password or encryptionKeySalt",
-          });
-        }}
-      >
-        Decrypt File
-      </button>
       <label className="form-control w-full">
-        <div className={`label ${step !== "download-file" ? "opacity-10" : ""}`}>
-          <span className="label-text">File name (include extension - .pdf, .doc, etc.)</span>
+        <div className={`label ${step === "add-file" ? "opacity-10" : ""}`}>
+          <span className="label-text">Password</span>
         </div>
         <input
-          type="text"
-          disabled={step !== "download-file"}
-          value={step !== "download-file" ? "" : fileNameAndExtension}
-          onChange={(x) => setFileNameAndExtension(x.target.value)}
+          type="password"
+          placeholder="Type a password..."
+          disabled={step === "add-file"}
+          value={step === "add-file" ? "" : $password.value}
+          onChange={(e) => $password.set(e.target.value)}
           className="input input-bordered w-full"
         />
       </label>
 
-      <a
-        type="button"
-        className={`btn ${step === "download-file" ? "btn-primary" : "btn-disabled"}`}
-        href={
-          decryptedFileBuffer
-            ? URL.createObjectURL(
-                new Blob([decryptedFileBuffer], { type: "application/octet-stream" }),
-              )
-            : "#"
-        }
-        download={step === "download-file" ? fileNameAndExtension : true}
-      >
-        Download Decrypted File
-      </a>
+      <label className="form-control w-full">
+        <div className={`label ${step === "add-file" ? "opacity-10" : ""}`}>
+          <span className="label-text">File name and extension (only required if uploading)</span>
+        </div>
+        <input
+          type="text"
+          disabled={step === "add-file"}
+          value={step === "add-file" ? "" : $fileName.value}
+          onChange={(e) => $fileName.set(e.target.value)}
+          className="input input-bordered w-full"
+        />
+      </label>
+
+      <span className="flex gap-2">
+        <button
+          className="btn btn-primary flex-1"
+          disabled={step === "add-file" || $isDownloading.value}
+          onClick={async () => {
+            if ($isDownloading.value) return;
+
+            $isDownloading.set(true);
+
+            const decryptFileResponse = await (() => {
+              if (!encryptedFileBuffer) return fail({ error: { message: "No file selected" } });
+
+              return decryptFile({
+                password: $password.value,
+                serializedInitializationVector: $serializedInitializationVector.value,
+                serializedEncryptionKeySalt: $serializedEncryptionKeySalt.value,
+                encryptedFileBuffer,
+              });
+            })();
+
+            $isDownloading.set(false);
+
+            if (!decryptFileResponse.success)
+              return notifyStore.push({ heading: "Could not decrypt file" });
+
+            downloadFile({ fileName: $fileName.value, fileBuffer: decryptFileResponse.data });
+          }}
+        >
+          <DocumentArrowDownIcon className="size-6" />{" "}
+          {$isDownloading.value ? "Downloading..." : "Decrypt & Download"}
+        </button>
+      </span>
+      <Keys
+        generateNewKeysOnMount={true}
+        serialisedEncryptionKeySalt={$serializedEncryptionKeySalt.value}
+        serialisedInitializationVector={$serializedInitializationVector.value}
+        onSerialisedEncryptionKeySaltChange={(x) => $serializedEncryptionKeySalt.set(x)}
+        onSerialisedInitializationVectorChange={(x) => $serializedInitializationVector.set(x)}
+      />
     </span>
   );
 };

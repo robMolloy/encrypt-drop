@@ -1,6 +1,5 @@
 import { Typography } from "@/components";
 import {
-  Decryption,
   deserializeUInt8Array,
   generateEncryptionKeySalt,
   generateInitializationVector,
@@ -148,11 +147,11 @@ const Parent = () => {
                 /> */}
               </span>
               <span className={mode === "Decrypt" ? "" : "hidden"}>
-                <Decryption
+                {/* <Decryption
                   password={password}
                   serializedEncryptionKeySalt={serialisedEncryptionKeySalt}
                   serializedInitializationVector={serialisedInitializationVector}
-                />
+                /> */}
               </span>
               <span className={mode === "Get" ? "" : "hidden"}>
                 <DisplayFilesTable />

@@ -10,12 +10,6 @@ export const EncryptScreen = () => {
           <div className="card-body">
             <Encryption uid={auth.currentUser?.uid} />
             <br />
-            {/* <Keys
-              onChange={(val) => {
-                $serialisedEncryptionKeySalt.set(val.serialisedEncryptionKeySalt);
-                $serialisedInitializationVector.set(val.serialisedInitializationVector);
-              }}
-            /> */}
           </div>
         </div>
       </Typography>
