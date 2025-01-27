@@ -66,11 +66,13 @@ export const Layout = (p: { children: React.ReactNode }) => {
             <NavBar
               leftChildren={
                 <div className="flex items-center gap-2 pl-4">
-                  <div className="block md:hidden">
-                    <OpenDrawerWrapper>
-                      <Bars3Icon className="size-8" />
-                    </OpenDrawerWrapper>
-                  </div>
+                  {false && (
+                    <div className="block md:hidden">
+                      <OpenDrawerWrapper>
+                        <Bars3Icon className="size-8" />
+                      </OpenDrawerWrapper>
+                    </div>
+                  )}
                   <Link href="/" className="p-0 text-2xl hover:underline">
                     <div className="hidden md:block">EncryptDrop</div>
                     <div className="block md:hidden">ED</div>

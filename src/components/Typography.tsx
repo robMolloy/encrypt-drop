@@ -5,9 +5,11 @@ export const Typography = (p: {
   fullPage?: boolean;
   wide?: boolean;
 }) => {
-  const wide = p.wide ?? false;
-  const wideClass = wide ? "" : "max-w-3xl px-6";
+  const wide = p.wide ?? true;
+  const wideClass = wide ? "" : "max-w-3xl";
   return (
-    <div className={`prose ${wideClass} ${p.fullPage ? "py-8" : ""} mx-auto`}>{p.children}</div>
+    <div className={`prose ${wideClass} ${p.fullPage ? "px-2 py-2 md:px-2 md:py-8" : ""} mx-auto`}>
+      {p.children}
+    </div>
   );
 };
